@@ -83,7 +83,16 @@
 				</p:outputPanel>
 				<p:outputPanel>
 					<h:form id="psn_table_form">
-						<h:outputText value="#{msgs['pseudonym.label.pleaseSelectDomain']}" rendered="#{empty PsnControllerV2.selectedDomain}" />
+						<!-- <h:outputText value="#{msgs['pseudonym.label.pleaseSelectDomain']}" rendered="#{empty PsnControllerV2.selectedDomain}" /> -->
+						<h:panelGroup rendered="#{empty PsnControllerV2.selectedDomain}">
+							<p:inputText value="#{PsnControllerV2.searchValueInDomains}" id="search_input_domains" autocomplete="off">
+								<p:ajax event="keyup" update="search_button_in_domains" />
+							</p:inputText>
+							<p:watermark for="search_input_domains" value="#{msgs['pseudonym.watermark.pseudonym']}"></p:watermark>
+							<p:commandButton value="#{msgs['pseudonym.label.searchInDomains']}" id="search_button_in_domains" actionListener="#{PsnControllerV2.searchPSNInDomains}"
+								update="@form" disabled="#{empty PsnControllerV2.searchValueInDomains}" />
+							<p:messages for="searchInDomains" closable="true"></p:messages>
+						</h:panelGroup>
 						<p:outputPanel styleClass="psnPanel" rendered="#{not empty PsnControllerV2.selectedDomain}">
 							<h:outputText value="#{msgs['pseudonym.label.operations']}" class="headline" />
 							<p:tabView id="tabView" styleClass="psntabView">
@@ -118,6 +127,20 @@
 										disabled="#{empty PsnControllerV2.pseudonym or empty PsnControllerV2.selectedDomain}" />
 									<p:messages for="depseudonymisation" closable="true"></p:messages>
 								</p:tab>
+								
+								<p:tab title="#{msgs['pseudonym.label.depseudonymise_decode']}" rendered="#{PsnControllerV2.displayDecodeTab()}">
+									<p>#{msgs['pseudonym.tooltip.depseudonymise_decode']}</p>
+									<p:inputText value="#{PsnControllerV2.pseudonymDecode}" id="pseudonym_input_decode">
+										<p:ajax event="keyup" update="depseudonymise_button_decode" />
+									</p:inputText>
+									<p:watermark for="pseudonym_input" value="#{msgs['pseudonym.watermark.pseudonym']}"></p:watermark>
+									<p:commandButton value="#{msgs['pseudonym.label.depseudonymise_decode']}" id="depseudonymise_button_decode"
+										actionListener="#{PsnControllerV2.valueOfPseudonymDecode}" update="@form" oncomplete="PF('psntable').filter()"
+										disabled="#{empty PsnControllerV2.pseudonymDecode or empty PsnControllerV2.selectedDomain}" />
+									<p:messages for="depseudonymisationDecode" closable="true"></p:messages>
+								</p:tab>
+								
+								
 								<p:tab title="#{msgs['pseudonym.label.anonymisation']}" id="anonymisation_tab">
 									<p>#{msgs['pseudonym.tooltip.anonymise']}</p>
 									<p:autoComplete id="anonymisation_input" value="#{PsnControllerV2.origValueForAnonymisation}" completeMethod="#{PsnControllerV2.complete}" maxResults="20"
@@ -207,11 +230,11 @@
 										</p:outputPanel>
 									</div>
 								</f:facet>
-								<p:column headerText="#{msgs['pseudonym.label.originalValue']}" filterBy="#{psn.originalValue}" filterStyle="display:none"
+								<p:column headerText="#{msgs['pseudonym.label.originalValue']}" filterBy="#{psn.originalValue}" filterStyle="display:none" style="width:93%;"
 									filterMatchMode="contains">
 									<h:outputText id="table_value_out" value="#{psn.originalValue}" title="#{psn.originalValue}" />
 								</p:column>
-								<p:column headerText="#{msgs['pseudonym.label.Pseudonym']}" filterBy="#{psn.pseudonym}" filterMatchMode="contains" filterStyle="display:none">
+								<p:column headerText="#{msgs['pseudonym.label.Pseudonym']}" filterBy="#{psn.pseudonym}" filterMatchMode="contains" filterStyle="display:none" style="width:7%;">
 									<h:outputText id="table_psn_out" value="#{psn.pseudonym}" title="#{psn.pseudonym}" />
 								</p:column>
 							</p:dataTable>

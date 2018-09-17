@@ -1,5 +1,8 @@
 package org.emau.icmvc.ganimed.ttp.psn;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
 /*
  * ###license-information-start###
  * gPAS - a Generic Pseudonym Administration Service
@@ -31,12 +34,19 @@ package org.emau.icmvc.ganimed.ttp.psn;
  */
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.ejb.EJB;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
@@ -48,10 +58,16 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
+import org.emau.icmvc.ganimed.ttp.psn.crypto.AESUtil;
+import org.emau.icmvc.ganimed.ttp.psn.crypto.RSAUtil;
+import org.emau.icmvc.ganimed.ttp.psn.dto.DomainDTO;
+import org.emau.icmvc.ganimed.ttp.psn.dto.DomainLightDTO;
 import org.emau.icmvc.ganimed.ttp.psn.dto.HashMapWrapper;
 import org.emau.icmvc.ganimed.ttp.psn.dto.PSNTreeDTO;
 import org.emau.icmvc.ganimed.ttp.psn.exceptions.CharNotInAlphabetException;
@@ -74,6 +90,7 @@ import org.emau.icmvc.ganimed.ttp.psn.model.PSNKey;
 import org.emau.icmvc.ganimed.ttp.psn.model.PSNKey_;
 import org.emau.icmvc.ganimed.ttp.psn.model.PSNProject;
 import org.emau.icmvc.ganimed.ttp.psn.model.PSN_;
+
 
 /**
  * webservice for pseudonyms
@@ -107,6 +124,13 @@ public class PSNManagerBean implements PSNManager {
 		if (logger.isDebugEnabled()) {
 			logger.debug("pseudonym requested for value " + value + " within domain " + domain);
 		}
+		
+		if(getPSNProject(domain).getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE)!=null && 
+				getPSNProject(domain).getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE).equals("true")) {
+			value=getNewOrigValue(value);
+			System.err.println("new value is set for orig value.");
+		}
+
 		try {
 			result = getPSN(value, domain);
 			if (logger.isDebugEnabled()) {
@@ -120,6 +144,36 @@ public class PSNManagerBean implements PSNManager {
 			result = createPSN(parent, value, null);
 		}
 		return result.getPseudonym();
+	}
+
+	/**
+	 * Würzburg 2018. Addition
+	 * 
+	 * Uses AES enryption to encrypt original value.
+	 * 
+	 * @return encrypted original value.
+	 */
+	private static String getNewOrigValue(final String value) {
+		StringBuilder newValue=new StringBuilder();
+		try {
+			newValue=newValue.append(Base64.getEncoder().encodeToString(AESUtil.encrypt(value, AESUtil.secretKey)));
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return newValue.toString();
 	}
 
 	private PSNProject getPSNProject(String domain) throws UnknownDomainException {
@@ -164,9 +218,20 @@ public class PSNManagerBean implements PSNManager {
 		int countReseeds = 0;
 		boolean done = false;
 		String pseudonym;
+		Generator temp=null;
 		synchronized (emSynchronizerDummy) {
 			do {
-				pseudonym = getGeneratorFor(parent.getDomain()).getNewPseudonym();
+				System.err.println("value @createPSN in PSNMangerBean "+ value);
+				if(parent.getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE)!=null && 
+						parent.getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE).equals("true")) {
+					temp=getGeneratorFor(parent.getDomain());				
+					temp.setOriginalValue(value);
+					System.err.println("origValue @ createPSN: "+value);
+					}
+				else {
+					temp=getGeneratorFor(parent.getDomain());
+				}				
+				pseudonym = temp.getNewPseudonym();
 				if ((existingPseudonyms != null && existingPseudonyms.contains(pseudonym))
 						|| (existingPseudonyms == null && existsPseudonym(parent.getDomain(), pseudonym))) {
 					if (logger.isDebugEnabled()) {
@@ -200,9 +265,29 @@ public class PSNManagerBean implements PSNManager {
 		}
 		return result;
 	}
-
+	/**
+	 * Würzburg 2018. Method was changed.
+	 * 
+	 * 
+	 * @return true if pseudonym exists in relavent domain(s). False otherwise.
+	 */
 	private boolean existsPseudonym(String domain, String pseudonym) {
-		return !getPSNObjects(domain, pseudonym).isEmpty();
+		
+		try {
+			if(getPSNProject(domain).getProperties().get(GeneratorProperties.MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS)!=null && getPSNProject(domain).getProperties().get(GeneratorProperties.MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS).equals("true")) 
+			{
+				return !getPSNObjectsForUniqueDomains(pseudonym).isEmpty();
+			}
+			else 
+			{
+				return !getPSNObjects(domain, pseudonym).isEmpty();
+			}
+		} catch (UnknownDomainException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return true;
+		}
+			
 	}
 
 	private List<PSN> getPSNObjects(String domain, String pseudonym) {
@@ -214,11 +299,11 @@ public class PSNManagerBean implements PSNManager {
 		criteriaQuery.select(root).where(predicate);
 		return em.createQuery(criteriaQuery).getResultList();
 	}
-
+	
 	private List<PSN> getAllPSNObjects(String domain) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("get all entries for domain " + domain);
-		}
+		}		
 		CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
 		CriteriaQuery<PSN> criteriaQuery = criteriaBuilder.createQuery(PSN.class);
 		Root<PSN> root = criteriaQuery.from(PSN.class);
@@ -228,6 +313,51 @@ public class PSNManagerBean implements PSNManager {
 		if (logger.isDebugEnabled()) {
 			logger.debug("found " + result.size() + " entries for domain " + domain);
 		}
+		return result;
+	}
+	/**
+	 * Würzburg 2018. 
+	 * 
+	 * Iterates over all domains, that have the property MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS set to true.
+	 * 
+	 * @return list of PSN objects found in relevant domains.
+	 */
+	private List<PSN> getPSNObjectsForUniqueDomains(String pseudonym) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("get all entries for unique domains ");
+		}
+		List<DomainLightDTO> localDomainList=domainManager.listDomainsLight();
+		
+		if (logger.isEnabledFor(Priority.FATAL)) {
+			logger.fatal(localDomainList.size()+" domains are tested for ibdw-property");
+		}
+		
+		localDomainList.removeIf(e -> !e.getProperties().contains("MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS=true"));		
+		
+		List<String> localDomainListString=localDomainList.stream().map(f->f.getDomain()).collect(Collectors.toList());
+		//System.err.println(localDomainListString.size()+": "+localDomainListString);
+		
+		if(localDomainListString.size()==0) {
+			if (logger.isEnabledFor(Priority.FATAL)) {
+				logger.fatal("something went wrong. Zero domains with MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS=true. ");
+			}
+		}
+		
+		CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+		CriteriaQuery<PSN> criteriaQuery = criteriaBuilder.createQuery(PSN.class);
+		Root<PSN> root = criteriaQuery.from(PSN.class);
+		
+		Expression<PSNProject> parentExpression = root.get(PSN_.psnProject);
+		
+		Predicate predicate1 = parentExpression.in(localDomainListString);		
+		Predicate predicate2 = criteriaBuilder.equal(root.get(PSN_.pseudonym),pseudonym);
+		System.err.println("pseudonym="+pseudonym);
+		Predicate predicate3=criteriaBuilder.and(predicate1, predicate2);
+				
+		criteriaQuery.select(root).where(predicate3);
+		System.err.println("criteriaQuery.getOrderList(): "+criteriaQuery.getOrderList());
+		List<PSN> result = em.createQuery(criteriaQuery).getResultList();
+		System.err.println("number of results in unique domains: "+result.size() );
 		return result;
 	}
 
@@ -253,14 +383,39 @@ public class PSNManagerBean implements PSNManager {
 		if (logger.isDebugEnabled()) {
 			logger.debug("pseudonym requested for value " + value + " within domain " + domain);
 		}
+		//Addition Wegehaupt 2018
+		try {
+			if(getPSNProject(domain).getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE)!=null && 
+					getPSNProject(domain).getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE).equals("true")) {
+				value=getNewOrigValue(value);
+			}
+		} catch (UnknownDomainException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		PSN result = getPSN(value, domain);
 		return result.getPseudonym();
 	}
 
-	private PSN getPSN(String value, String domain) throws UnknownValueException {
+	private PSN getPSN(String value, String domain) throws UnknownValueException {		
 		// zusammengesetzter primary key
+		
+		PSN result = null;
 		PSNKey key = new PSNKey(value, domain);
-		PSN result = em.find(PSN.class, key);
+		
+		try {
+			if(getPSNProject(domain).getProperties().get(GeneratorProperties.MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS)!=null && 
+					getPSNProject(domain).getProperties().get(GeneratorProperties.MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS).equals("true")) {
+				result = findKeyforUniqueDomain(key);							
+			}
+			else {
+				result = em.find(PSN.class, key);
+			}
+		} catch (UnknownDomainException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		if (result == null) {
 			String message = "value '" + value + "' for domain '" + domain + "' not found";
 			logger.error(message);
@@ -316,6 +471,10 @@ public class PSNManagerBean implements PSNManager {
 		if (logger.isDebugEnabled()) {
 			logger.debug("removing value-pseudonym-pair for value '" + value + "' from domain '" + domain + "'");
 		}
+		if(getPSNProject(domain).getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE)!=null && 
+				getPSNProject(domain).getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE).equals("true")) {
+			value=getNewOrigValue(value);
+		}
 		if (!deletablePSNsForDomain(domain)) {
 			String message = "the domain '" + domain + "' does not allow deletion of value-pseudonym-pairs";
 			logger.warn(message);
@@ -359,6 +518,57 @@ public class PSNManagerBean implements PSNManager {
 		List<PSN> resultList = getPSNObjects(domain, psn);
 		if (resultList.size() == 1) {
 			result = resultList.get(0).getKey().getOriginValue();
+		} else if (resultList.isEmpty()) {
+			String message = "value for pseudonym '" + psn + "' not found within domain '" + domain + "'";
+			logger.warn(message);
+			throw new PSNNotFoundException(message);
+		} else {
+			String message = "found multiple values for pseudonym '" + psn + "' within domain '" + domain + "' - may be a jpa-caching problem";
+			logger.fatal(message);
+			throw new InvalidPSNException(message);
+		}
+		if (isAnonymised(result)) {
+			String message = "requested value for pseudonym " + psn + " can't be retrieved - it is anonymised";
+			logger.info(message);
+			throw new ValueIsAnonymisedException(message);
+		}
+		return result;
+	}
+	
+	/**
+	 * Würzburg 2018. 
+	 * 
+	 * @return decoded original value for given pseudonym
+	 */
+	@Override
+	public String getValueForDecode(String psn, String domain)
+			throws InvalidPSNException, PSNNotFoundException, InvalidGeneratorException, UnknownDomainException, ValueIsAnonymisedException {
+		String result = "";
+		if (logger.isDebugEnabled()) {
+			logger.debug("find value for pseudonym '" + psn + "' within domain '" + domain + "'");
+		}
+		validatePSN(psn, domain);
+		List<PSN> resultList = getPSNObjects(domain, psn);
+		if (resultList.size() == 1) {
+			result = resultList.get(0).getKey().getOriginValue();
+			try {
+				result = AESUtil.decrypt(result, AESUtil.secretKey);
+			} catch (InvalidKeyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchPaddingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchAlgorithmException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (BadPaddingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalBlockSizeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		} else if (resultList.isEmpty()) {
 			String message = "value for pseudonym '" + psn + "' not found within domain '" + domain + "'";
 			logger.warn(message);
@@ -545,13 +755,32 @@ public class PSNManagerBean implements PSNManager {
 	@Override
 	public void insertValuePseudonymPair(String value, String pseudonym, String domain)
 			throws DBException, InvalidGeneratorException, InvalidPSNException, UnknownDomainException {
+		
+		boolean isUniqueDomain=false;
+		
 		if (logger.isInfoEnabled()) {
 			logger.info("insert pseudonym for '" + value + "' in domain '" + domain + "'");
 		}
 		PSNProject parent = getPSNProject(domain);
 		validatePSN(pseudonym, domain);
+		if(getPSNProject(domain).getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE)!=null && 
+				getPSNProject(domain).getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE).equals("true")) {
+			value=getNewOrigValue(value);
+		}
+		if(getPSNProject(domain).getProperties().get(GeneratorProperties.MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS)!=null && 
+				getPSNProject(domain).getProperties().get(GeneratorProperties.MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS).equals("true")) {
+			isUniqueDomain=true;							
+		}
 		PSNKey key = new PSNKey(value, domain);
-		PSN psn = em.find(PSN.class, key);
+		PSN psn=null;
+		
+		if(isUniqueDomain) {	//new Wegehaupt 2018
+			psn=findKeyforUniqueDomain(key);}
+		else {
+			psn = em.find(PSN.class, key);}
+		
+		//PSN psn = em.find(PSN.class, key);
+		
 		if (psn != null) {
 			if (psn.getPseudonym().equals(pseudonym)) {
 				logger.warn("pseudonym for value '" + value + "' already exists within domain '" + domain + "'");
@@ -578,9 +807,12 @@ public class PSNManagerBean implements PSNManager {
 		}
 	}
 
+	//This method is (also) used by the frontend when inserting just ONE pair.
 	@Override
 	public void insertValuePseudonymPairs(HashMapWrapper<String, String> pairs, String domain)
 			throws DBException, InvalidGeneratorException, InvalidPSNException, UnknownDomainException {
+		boolean exchangeOrigValue=false;
+		boolean isUniqueDomain=false;
 		if (pairs == null) {
 			logger.warn("parameter 'pairs' should not be null");
 			pairs = new HashMapWrapper<String, String>();
@@ -589,18 +821,37 @@ public class PSNManagerBean implements PSNManager {
 			logger.info("insert " + pairs.getMap().size() + " values-pseudonym pairs in domain '" + domain + "'");
 		}
 		PSNProject parent = getPSNProject(domain);
+		
+		if(parent.getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE)!=null && 
+				parent.getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE).equals("true")) {
+			exchangeOrigValue=true;
+		}
+		if(parent.getProperties().get(GeneratorProperties.MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS)!=null && 
+				parent.getProperties().get(GeneratorProperties.MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS).equals("true")) {
+			isUniqueDomain=true;
+		}
+		
 		synchronized (emSynchronizerDummy) {
 			List<String> duplicates = new ArrayList<String>();
 			for (Entry<String, String> entry : pairs.getMap().entrySet()) {
 				validatePSN(entry.getValue(), domain);
-				PSNKey key = new PSNKey(entry.getKey(), domain);
-				PSN psn = em.find(PSN.class, key);
+				PSNKey key=null;
+				PSN psn=null;
+				if(exchangeOrigValue) {		//new Wegehaupt 2018
+					key = new PSNKey(getNewOrigValue(entry.getKey()), domain);}
+				else {
+					key = new PSNKey(entry.getKey(), domain);}				
+				if(isUniqueDomain) {	//new Wegehaupt 2018
+					psn=findKeyforUniqueDomain(key);}
+				else {
+					psn = em.find(PSN.class, key);}
+				
 				if (psn != null) {
 					if (psn.getPseudonym().equals(entry.getValue())) {
 						logger.warn("pseudonym for value '" + entry.getKey() + "' already exists within domain '" + domain + "'");
 						duplicates.add(entry.getKey());
 					} else {
-						String message = "a different pseudonym for value '" + entry.getKey() + "' already exists within domain '" + domain + "'";
+						String message = "a different pseudonym for value '" + entry.getKey() + "' already exists within domain '" + psn.getPSNProject().getDomain() + "'";
 						logger.error(message);
 						throw new DBException(message);
 					}
@@ -617,7 +868,11 @@ public class PSNManagerBean implements PSNManager {
 			}
 			synchronized (emSynchronizerDummy) {
 				for (Entry<String, String> entry : pairs.getMap().entrySet()) {
-					PSN psn = new PSN(parent, entry.getKey(), entry.getValue());
+					PSN psn=null;
+					if(exchangeOrigValue)
+						psn = new PSN(parent, getNewOrigValue(entry.getKey()), entry.getValue());//changed Wegehaupt 2018
+					else
+						psn = new PSN(parent, entry.getKey(), entry.getValue());//changed Wegehaupt 2018
 					em.persist(psn);
 					parent.getPsnList().add(psn);
 				}
@@ -626,6 +881,32 @@ public class PSNManagerBean implements PSNManager {
 		if (logger.isInfoEnabled()) {
 			logger.info("inserted " + pairs.getMap().size() + " values-pseudonym pairs in domain '" + domain + "'");
 		}
+	}
+
+	
+	
+	private PSN findKeyforUniqueDomain(PSNKey key) {
+		String origValue=key.getOriginValue();
+		List<DomainLightDTO> localDomainList=domainManager.listDomainsLight();		
+		//localDomainList.removeIf(e -> !(getPSNProject(e.getDomain()).getDomain().getProperties().containsKey(GeneratorProperties.MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS) && getPSNProject(e.getDomain()).getDomain().getProperties().get(GeneratorProperties.MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS).equals("true")));
+		localDomainList.removeIf(e -> !e.getProperties().contains("MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS=true"));
+
+		if(localDomainList.size()==0) {
+			if (logger.isEnabledFor(Priority.FATAL)) {
+				logger.fatal("Something went wrong. Zero domains with property MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS=true. ");
+			}
+			System.err.println("Something went wrong. Zero domains with property MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS=true. ");
+		}
+		List<String> localDomainListString=localDomainList.stream().map(f->f.getDomain()).collect(Collectors.toList());
+		
+		PSN result=null;
+		
+		for(String uniqueDomain:localDomainListString) {
+			key = new PSNKey(origValue, uniqueDomain);
+			result = em.find(PSN.class, key);
+			if(result!=null) break;
+		}
+		return result;
 	}
 
 	@Override
@@ -661,5 +942,34 @@ public class PSNManagerBean implements PSNManager {
 			}
 		}
 		return currentNode;
+	}
+
+	/**
+	 * Würzburg 2018. 
+	 * 
+	 * @return domain(s) of given pseudonym
+	 */
+	@Override
+	public String getPSNDomain(String psn) throws DBException, InvalidGeneratorException, InvalidPSNException,
+			PSNNotFoundException, ValueIsAnonymisedException {
+		
+			CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+			CriteriaQuery<PSN> criteriaQuery = criteriaBuilder.createQuery(PSN.class);
+			Root<PSN> root = criteriaQuery.from(PSN.class);
+			Predicate predicate = criteriaBuilder.equal(root.get(PSN_.pseudonym), psn);
+			criteriaQuery.select(root).where(predicate);
+
+			List<PSN> domains=null;
+			StringBuilder returnString=new StringBuilder();
+
+			domains=em.createQuery(criteriaQuery).getResultList();
+			if(domains!=null) {
+				for(PSN d:domains) {
+					returnString.append(d.getPSNProject().getDomain());
+					returnString.append(", ");
+				}
+			}
+			return returnString.toString().length() > 0 ? returnString.toString().substring(0, returnString.toString().length() - 2): "";
+			
 	}
 }

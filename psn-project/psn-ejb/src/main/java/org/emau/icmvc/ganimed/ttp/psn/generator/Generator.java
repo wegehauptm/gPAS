@@ -31,10 +31,17 @@ package org.emau.icmvc.ganimed.ttp.psn.generator;
  */
 
 import java.lang.reflect.Constructor;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.Random;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
 import org.apache.log4j.Logger;
+import org.emau.icmvc.ganimed.ttp.psn.crypto.RSAUtil;
 import org.emau.icmvc.ganimed.ttp.psn.exceptions.CharNotInAlphabetException;
 import org.emau.icmvc.ganimed.ttp.psn.exceptions.InvalidGeneratorException;
 import org.emau.icmvc.ganimed.ttp.psn.exceptions.InvalidPSNException;
@@ -54,14 +61,24 @@ public class Generator {
 	private final int length;
 	private final String prefix;
 	private final String suffix;
+	private final boolean isIBDW;//New Würzburg 2018
 	private final static int DEFAULT_PSEUDONYM_LENGTH = 8;
 	private final boolean includePrefixInCheckDigitCalculation;
+	
+	private String originalValue=null;
 
+	
+	/**
+	 * Würzburg 2018. Changed.
+	 * 
+	 * @return Generator instance
+	 */
 	public Generator(Class<? extends CheckDigits> checkDigitClass, Alphabet alphabet, Map<GeneratorProperties, String> properties)
 			throws InvalidGeneratorException {
 		length = readPSNLengthFromProperty(properties.get(GeneratorProperties.PSN_LENGTH));
 		prefix = (properties.get(GeneratorProperties.PSN_PREFIX) == null ? "" : properties.get(GeneratorProperties.PSN_PREFIX));
 		suffix = (properties.get(GeneratorProperties.PSN_SUFFIX) == null ? "" : properties.get(GeneratorProperties.PSN_SUFFIX));
+		isIBDW = (properties.get(GeneratorProperties.ENCODE_ORIGINAL_VALUE) == null ? false : properties.get(GeneratorProperties.ENCODE_ORIGINAL_VALUE).equals("true"));
 		String temp = (properties.get(GeneratorProperties.INCLUDE_PREFIX_IN_CHECK_DIGIT_CALCULATION));
 		includePrefixInCheckDigitCalculation = (temp != null) && temp.equalsIgnoreCase("true");
 		if (logger.isDebugEnabled()) {
@@ -122,7 +139,12 @@ public class Generator {
 		if (logger.isDebugEnabled()) {
 			logger.debug("generate new pseudonym");
 		}
-		String result = generateNewPseudonym();
+		String result = null;
+		if(isIBDW)//Changed Würzburg 2018
+			result=generateNewPseudonymIBDW();
+		else
+			result=generateNewPseudonym();
+		System.err.println("result @getNewPseudonym: "+result);
 		if (logger.isTraceEnabled()) {
 			if (includePrefixInCheckDigitCalculation) {
 				logger.trace("generate check-digits for " + prefix + result);
@@ -156,7 +178,16 @@ public class Generator {
 		}
 		return result.toString();
 	}
-
+	
+	private String generateNewPseudonymIBDW() {
+		StringBuilder result = new StringBuilder();
+		for (int i = 0; i < length; i++) {
+			result.append(checkDigits.getAlphabet().getSymbol(rand.nextInt(checkDigits.getAlphabet().length())));
+		}
+		return result.toString();
+	}
+	
+	
 	/**
 	 * 
 	 * @param value
@@ -190,4 +221,10 @@ public class Generator {
 	public void randomize() {
 		rand.setSeed(System.currentTimeMillis());
 	}
+	//New Würzburg 2018
+	public void setOriginalValue(String originalValue) {
+		System.err.println("origValue: "+originalValue);
+		this.originalValue=originalValue;
+	}
+	
 }

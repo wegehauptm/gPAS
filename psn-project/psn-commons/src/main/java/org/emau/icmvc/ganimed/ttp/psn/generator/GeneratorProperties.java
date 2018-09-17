@@ -61,5 +61,14 @@ public enum GeneratorProperties {
 	/**
 	 * is it allowed to delete entries within this project
 	 */
-	PSNS_DELETABLE;
+	PSNS_DELETABLE,
+	/**
+	 * Change Würzburg 2018. Is the domain a member of the domains that have common unique pseudonyms.
+	 */
+	MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS,
+	/**
+	 * Change Würzburg 2018. Is the generator to use IBDW's algorithm?.
+	 */	
+	ENCODE_ORIGINAL_VALUE;
+	;
 }

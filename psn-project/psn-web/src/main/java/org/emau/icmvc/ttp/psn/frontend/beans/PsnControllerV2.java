@@ -59,6 +59,7 @@ import org.emau.icmvc.ganimed.ttp.psn.exceptions.PSNNotFoundException;
 import org.emau.icmvc.ganimed.ttp.psn.exceptions.UnknownDomainException;
 import org.emau.icmvc.ganimed.ttp.psn.exceptions.UnknownValueException;
 import org.emau.icmvc.ganimed.ttp.psn.exceptions.ValueIsAnonymisedException;
+import org.emau.icmvc.ganimed.ttp.psn.generator.GeneratorProperties;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 import org.slf4j.Logger;
@@ -84,6 +85,14 @@ public class PsnControllerV2 {
 	 * bean representation of pseudonym_input_text
 	 */
 	private String pseudonym;
+	/**
+	 * bean representation of pseudonym to decode
+	 */
+	private String pseudonymDecode;// Würzburg 2018
+	/**
+	 * bean representation of pseudonym to look for
+	 */
+	private String searchValueInDomains;// Würzburg 2018
 	/**
 	 * bean representation of search_input
 	 */
@@ -127,6 +136,8 @@ public class PsnControllerV2 {
 	private String psnValuePairPseudonym;
 
 	private TreeNode psnTree;
+
+
 
 	@PostConstruct
 	public void init() {
@@ -380,6 +391,49 @@ public class PsnControllerV2 {
 		}
 	}
 
+	/**
+	 * Würzburg 2018. 
+	 * retrieves existing originalValue in currently selected domain
+	 * 
+	 * @return ""
+	 */
+	public void valueOfPseudonymDecode() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		if (logger.isDebugEnabled()) {
+			logger.debug("valueOfPseudonym called for pseudonymDecode '" + pseudonym + "' and Domain '" + selectedDomain + "'");
+		}
+		try {
+			String originalValue = psnManager.getValueForDecode(pseudonymDecode, selectedDomain.getDomain());
+			Object[] args2 = { originalValue, pseudonymDecode };
+			if (logger.isInfoEnabled()) {
+				logger.info("originalDecode value retrieved for pseudonym'" + pseudonym + "'");
+			}
+			context.addMessage("depseudonymisationDecode", new FacesMessage(new MessageFormat(messages.getString("psn.info.getValue")).format(args2), ""));
+			pseudonymDecode = null;
+		} catch (InvalidGeneratorException e) {
+			context.addMessage("depseudonymisationDecode", new FacesMessage(FacesMessage.SEVERITY_ERROR, e.getLocalizedMessage(), e.getMessage()));
+			if (logger.isErrorEnabled())
+				logger.error("", e);
+		} catch (InvalidPSNException e) {
+			context.addMessage("depseudonymisationDecode", new FacesMessage(FacesMessage.SEVERITY_ERROR, e.getLocalizedMessage(), e.getMessage()));
+			if (logger.isErrorEnabled())
+				logger.error("", e);
+		} catch (PSNNotFoundException e) {
+			context.addMessage("depseudonymisationDecode",
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, messages.getString("psn.error.psnNotFound"), e.getMessage()));
+			if (logger.isErrorEnabled())
+				logger.error("psn not found", e);
+		} catch (UnknownDomainException e) {
+			context.addMessage("depseudonymisationDecode",
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, messages.getString("domain.error.unkownDomain"), e.getMessage()));
+			if (logger.isErrorEnabled())
+				logger.error("", e);
+		} catch (ValueIsAnonymisedException e) {
+			context.addMessage("depseudonymisationDecode", new FacesMessage(FacesMessage.SEVERITY_ERROR, e.getLocalizedMessage(), e.getMessage()));
+			if (logger.isErrorEnabled())
+				logger.error("", e);
+		}
+	}
 	public List<String> complete(String query) {
 
 		List<String> result = new ArrayList<String>();
@@ -488,6 +542,62 @@ public class PsnControllerV2 {
 				logger.error("", e);
 		}
 	}
+	/**
+	 * Würzburg 2018. 
+	 * 
+	 * Iterates over all domains and tries to find pseudonym.
+	 * 
+	 * displays message: domains that contain the pseudonym. Can be more than one.
+	 */
+	public void searchPSNInDomains() {
+		FacesContext context = FacesContext.getCurrentInstance();
+		String domain=null;
+		if (logger.isDebugEnabled()) {
+			logger.debug("searchPseudonymInDomains called for value '" + searchValueInDomains + "' and all domains.");
+		}
+		try {
+			if (searchValueInDomains.isEmpty()) {
+				context.addMessage("searchInDomains", new FacesMessage(FacesMessage.SEVERITY_INFO, "Can't process empty value.", ""));
+				if (logger.isErrorEnabled()) {
+					logger.error("can't retrieve pseudonym for empty value");
+				}
+			} else {
+				domain = psnManager.getPSNDomain(searchValueInDomains);				
+				if (logger.isInfoEnabled()) {
+					logger.info("domain retrieved for Value'" + searchValueInDomains + "'");
+				}
+			}
+			Object[] args2 = { searchValueInDomains, domain };
+			if(!((String)args2[1]).equals("")) {
+				context.addMessage("searchInDomains", new FacesMessage(new MessageFormat(messages.getString("psn.info.getDomain")).format(args2), ""));
+			}else {
+				context.addMessage("searchInDomains", new FacesMessage(messages.getString("psn.info.getDomainNotFound")));
+			}
+			searchValueInDomains = null;
+		} catch (DBException e) {
+			String[] args = { searchValueInDomains };
+			context.addMessage("searchInDomains",
+					new FacesMessage(FacesMessage.SEVERITY_INFO, new MessageFormat(messages.getString("psn.error.NoPsnForValue")).format(args), ""));
+			if (logger.isErrorEnabled())
+				logger.error("", e);
+			e.printStackTrace();
+		} catch (InvalidGeneratorException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidPSNException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (PSNNotFoundException e) {
+			String[] args = { searchValueInDomains };
+			context.addMessage("searchInDomains",
+					new FacesMessage(FacesMessage.SEVERITY_INFO, new MessageFormat(messages.getString("psn.error.NoPsnForValue")).format(args), ""));
+			if (logger.isErrorEnabled())
+				logger.error("", e);
+		} catch (ValueIsAnonymisedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	public PSNManager getPsnManager() {
 		return psnManager;
@@ -512,7 +622,27 @@ public class PsnControllerV2 {
 	public void setPseudonym(String pseudonym) {
 		this.pseudonym = pseudonym;
 	}
+	/**
+	 * Würzburg 2018. Start
+	 * 
+	 */
+	public String getPseudonymDecode() {
+		return pseudonymDecode;
+	}
 
+	public void setPseudonymDecode(String pseudonymDecode) {
+		this.pseudonymDecode = pseudonymDecode;
+	}
+	
+	public boolean displayDecodeTab() {
+		if(getSelectedDomain().getProperties().contains("ENCODE_ORIGINAL_VALUE=true"))
+			return true;
+		return false;
+	}
+	/**
+	 * Würzburg 2018. End
+	 * 
+	 */
 	public String getOriginalValue() {
 		return originalValue;
 	}
@@ -604,5 +734,13 @@ public class PsnControllerV2 {
 
 	public void setPsnValuePairPseudonym(String psnValuePairPseudonym) {
 		this.psnValuePairPseudonym = psnValuePairPseudonym;
+	}
+
+	public String getSearchValueInDomains() {
+		return searchValueInDomains;
+	}
+
+	public void setSearchValueInDomains(String searchValueInDomains) {
+		this.searchValueInDomains = searchValueInDomains;
 	}
 }

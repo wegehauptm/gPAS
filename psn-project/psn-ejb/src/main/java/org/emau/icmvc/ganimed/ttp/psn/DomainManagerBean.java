@@ -62,8 +62,10 @@ import org.emau.icmvc.ganimed.ttp.psn.generator.GeneratorProperties;
 import org.emau.icmvc.ganimed.ttp.psn.internal.AnonymDomain;
 import org.emau.icmvc.ganimed.ttp.psn.internal.Cache;
 import org.emau.icmvc.ganimed.ttp.psn.model.PSN;
+import org.emau.icmvc.ganimed.ttp.psn.model.PSNKey;
 import org.emau.icmvc.ganimed.ttp.psn.model.PSNKey_;
 import org.emau.icmvc.ganimed.ttp.psn.model.PSNProject;
+//import org.emau.icmvc.ganimed.ttp.psn.model.PSN_;
 import org.emau.icmvc.ganimed.ttp.psn.model.PSN_;
 
 /**
@@ -277,8 +279,9 @@ public class DomainManagerBean implements DomainManagerLocal, DomainManager {
 		CriteriaQuery<Long> cq = cb.createQuery(Long.class);
 		Root<PSN> root = cq.from(PSN.class);
 		cq.select(cb.count(root));
-		cq.where(cb.equal(root.get(PSN_.key).get(PSNKey_.domain), domain));
+		cq.where(cb.equal(root.get(PSN_.key).get(PSNKey_.domain), domain));	//java.lang.NullPointerException
 		return em.createQuery(cq).getSingleResult();
+
 	}
 
 	@Override

@@ -5,9 +5,42 @@
 	<parent>
 		<groupId>org.emau.icmvc.ganimed.ttp</groupId>
 		<artifactId>psn-project</artifactId>
-		<version>1.7.10</version>
+		<version>1.7.10</version>		
 	</parent>
-
+	<!-- 
+  <build>
+  <pluginManagement>
+    <plugins>
+       <plugin>
+                    <groupId>org.bsc.maven</groupId>
+                    <artifactId>maven-processor-plugin</artifactId>
+                    <version>2.2.4</version>
+                    <executions>
+                        <execution>
+                            <id>process</id>
+                            <goals>
+                                <goal>process</goal>
+                            </goals>
+                            <phase>generate-sources</phase>
+                            <configuration>
+                                <processors>
+                                    <processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+                                </processors>
+                            </configuration>
+                        </execution>
+                    </executions>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.hibernate</groupId>
+                            <artifactId>hibernate-jpamodelgen</artifactId>
+                            <version>${hibernate.version}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+    </plugins>
+    </pluginManagement>
+  </build>
+-->
 	<dependencies>
 		<dependency>
 			<groupId>log4j</groupId>
@@ -21,11 +54,11 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 		</dependency>
-		<dependency>
-			<!-- meta-klassen generierung fuer jpa -->
+		<!-- <dependency>
+			
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-jpamodelgen</artifactId>
-		</dependency>
+		</dependency> -->
 		<!-- logging fuer eclipselink -->
 		<dependency>
 			<groupId>org.jboss.logging</groupId>

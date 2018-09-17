@@ -212,6 +212,9 @@ public interface PSNManager {
 			@XmlElement(required = true) @WebParam(name = "domain") String domain)
 			throws InvalidGeneratorException, InvalidPSNException, PSNNotFoundException, UnknownDomainException, ValueIsAnonymisedException;
 
+	public @XmlElement(required = true) String getValueForDecode(@XmlElement(required = true) @WebParam(name = "psn") String psn, 
+			@XmlElement(required = true) @WebParam(name = "domain") String domain) 
+			throws InvalidGeneratorException, InvalidPSNException, PSNNotFoundException, UnknownDomainException, ValueIsAnonymisedException;
 	/**
 	 * list version of {@link PSNManager#getValueFor(String, String)}<br>
 	 * returns a map&lt;psn, value&gt; (with value="*** PSN NOT FOUND ***" for each given psn which is unknown for the given domain)
@@ -302,4 +305,10 @@ public interface PSNManager {
 	public PSNTreeDTO getPSNTreeForPSN(@XmlElement(required = true) @WebParam(name = "psn") String psn,
 			@XmlElement(required = true) @WebParam(name = "domain") String domain) throws DBException, InvalidGeneratorException, InvalidPSNException,
 			UnknownDomainException, PSNNotFoundException, ValueIsAnonymisedException;
+	
+	/**
+	 * Return domain(s) that contain(s) a pseudonym value
+	 */
+	public String getPSNDomain(@XmlElement(required = true) @WebParam(name = "psn") String psn) 
+			throws DBException, InvalidGeneratorException, InvalidPSNException, PSNNotFoundException, ValueIsAnonymisedException;
 }

@@ -54,6 +54,7 @@ public class Cache {
 
 	static {
 		for(GeneratorProperties property : GeneratorProperties.values()) {
+			System.err.println("adding property "+property.toString());
 			possibleGeneratorProperties.add(property.toString());
 		}
 	}
