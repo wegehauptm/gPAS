@@ -67,8 +67,12 @@ public enum GeneratorProperties {
 	 */
 	MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS,
 	/**
-	 * Change Würzburg 2018. Is the generator to use IBDW's algorithm?.
+	 * Change Würzburg 2018. Is the generator to use IBDW's algorithm?
 	 */	
-	ENCODE_ORIGINAL_VALUE;
+	ENCODE_ORIGINAL_VALUE,
+	/**
+	 * Change Würzburg 2018. Define the lifetime of a initially created PSN
+	 */	
+	EXPIRY_TIME_OF_PSN
 	;
 }

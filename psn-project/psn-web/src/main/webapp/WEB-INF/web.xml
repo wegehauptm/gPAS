@@ -64,26 +64,62 @@
  <welcome-file-list>
   <welcome-file>html/index.xhtml</welcome-file>
  </welcome-file-list>
- <security-constraint>
+<!-- <security-constraint>
   <display-name>security</display-name>
   <web-resource-collection>
    <web-resource-name>app</web-resource-name>
    <url-pattern>/html/*</url-pattern>
   </web-resource-collection>
-  <!-- <auth-constraint>
+  <auth-constraint>
    <description>admin access</description>
    <role-name>psn_admin</role-name>
-  </auth-constraint> -->
+  </auth-constraint>
+ </security-constraint>-->
+ <!-- 
+  <security-constraint>
+  <display-name>security</display-name>
+  <web-resource-collection>
+   <web-resource-name>app</web-resource-name>
+   <url-pattern>/html/*</url-pattern>
+  </web-resource-collection>
+  <auth-constraint>
+   <description>admin access</description>
+   <role-name>Admin</role-name>
+   <role-name>User</role-name>
+  </auth-constraint>
  </security-constraint>
- <login-config>
+ -->
+  <!-- 
+  <login-config>
+    <auth-method>BASIC</auth-method>
+    <realm-name>ApplicationRealm</realm-name>
+</login-config>
+ -->
+<!-- 
+<login-config>
   <auth-method>BASIC</auth-method>
-  <!-- <realm-name>ttp-security-Realm</realm-name> -->
- </login-config>
+  <realm-name>security-beispiel-domain</realm-name> simple-auth-realm
+  	<realm-name>ttp-security-Realm</realm-name>
+ </login-config> -->
+<!-- <login-config>
+    <auth-method>FORM</auth-method>
+    <realm-name>file</realm-name>
+    <form-login-config>
+        <form-login-page>/login.xhtml</form-login-page>
+        <form-error-page>/error.xhtml</form-error-page>
+    </form-login-config>
+</login-config>
+ --> 
  <!-- CSV operations roles -->
- <security-role>
-  <role-name>psn_admin</role-name>
- </security-role>
+	<security-role>
+  		<role-name>Admin</role-name><!-- psn_admin -->
+	</security-role>
+	<security-role>
+		<role-name>User</role-name>
+	</security-role>
+ 
+ 
  <session-config>
-  <session-timeout>30</session-timeout>
+  <session-timeout>-1</session-timeout><!-- previously 30 Wegehaupt-->
  </session-config>
 </web-app>

@@ -34,6 +34,9 @@
         "http://www.jboss.org/j2ee/dtd/jboss-web_5_0.dtd">
 <jboss-web>
 	<!-- authentication -->
-	<!-- <security-domain>ttp-security</security-domain> -->
+	<!-- <security-domain>ttp-security</security-domain>-->
+    <security-domain>security-beispiel-domain</security-domain>
+    <!-- <security-domain>simple-auth</security-domain> -->
+    <!-- "In WildFly 8 security domains no longer use the prefix java:/jaas/ in their names. Remove this prefix from the security domain configurations in jboss-web.xml for web applications and jboss.xml for enterprise applications." -->
 	<context-root>gpas-web</context-root>
 </jboss-web>

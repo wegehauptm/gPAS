@@ -1,0 +1,178 @@
+<!--
+  ###license-information-start###
+  gPAS - a Generic Pseudonym Administration Service
+  __
+  Copyright (C) 2013 - 2017 The MOSAIC Project - Institut fuer Community Medicine der
+  							Universitaetsmedizin Greifswald - mosaic-projekt@uni-greifswald.de
+  							concept and implementation
+  							l. geidel
+  							web client
+  							g. weiher
+  							a. blumentritt
+  							please cite our publications
+  							http://dx.doi.org/10.3414/ME14-01-0133
+  							http://dx.doi.org/10.1186/s12967-015-0545-6
+  __
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  ###license-information-end###
+  -->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:jstl="http://java.sun.com/jsp/jstl/functions" xmlns:p="http://primefaces.org/ui">
+
+<body>
+	<ui:composition template="/template/ths_templ.xhtml">
+		<ui:define name="meta_tags">
+			<link rel="stylesheet" type="text/css" href="#{request.contextPath}/css/psn.css" />
+		</ui:define>
+		<ui:define name="customLogo">
+			<img src="#{request.contextPath}/img/gpas_logo.png" />
+		</ui:define>
+		<ui:define name="header_title">#{msgs['general.headerTitle']}</ui:define>
+		<ui:define name="title">
+			    <h:form>
+	    			<h1>
+						<h:outputFormat value="#{msgs['general.title']}">
+							<f:param value="${display_version}" />
+						</h:outputFormat>
+					</h1>
+			        <p:commandButton value="logout" action="#{UserController.logout}" disabled="#{UserController.loggedIn eq false}"/>
+			    </h:form>
+		</ui:define>
+		<ui:define name="info">
+			<p:tabMenu activeIndex="4">
+				<p:menuitem value="#{msgs['label.navigation.domain']}" url="domain_management.xhtml" />
+				<p:menuitem value="#{msgs['label.navigation.psn']}" url="psn_management.xhtml" />
+				<p:menuitem value="#{msgs['label.navigation.File']}" url="batch_processing.xhtml" />
+				<p:menuitem value="#{msgs['label.navigation.stat']}" url="statistic.xhtml" />
+				<p:menuitem value="#{msgs['label.navigation.users']}" url="users.xhtml" />
+			</p:tabMenu>
+		</ui:define>
+		<ui:define name="content">
+			<p:growl id="growl" autoUpdate="true"></p:growl>
+			<h:form id="confirm_form">
+				<p:confirmDialog id="delete_confirm" message="Do you really want to delete your account?" header="deleting account" severity="alert"
+					widgetVar="delete_confirm_usr">
+
+					<p:commandButton value="Yes" actionListener="#{UserController.deleteSelectedUser()}"
+						oncomplete="PF('delete_confirm_usr').hide();" /> <!-- update=":domain_table_form:" -->
+					<p:commandButton value="No" onclick="PF('delete_confirm_usr').hide();" type="button" />
+
+				</p:confirmDialog>
+			</h:form>
+			<h:form>
+				<p:confirmDialog id="change_password" message="Type in old and new password" header="changing password" severity="alert"
+					widgetVar="change_password_usr">
+					<h:outputLabel for="passchange1" value="old password" />
+				    <p:inputText id="passchange1" value="#{UserController.passChange1}" required="true">
+				    	<p:ajax event="keyup" />
+				    </p:inputText><br></br>				    
+				    <h:outputLabel for="passchange2" value="new password" />
+				    <p:inputText id="passchange2" value="#{UserController.passChange2}" required="true">
+				    	<p:ajax event="keyup" />
+				    </p:inputText><br></br>
+				    <h:outputLabel for="passchange3" value="new password" />
+				    <p:inputText id="passchange3" value="#{UserController.passChange3}" required="true">
+				    	<p:ajax event="keyup" />
+				    </p:inputText><br></br>
+				    
+					<p:commandButton value="OK" actionListener="#{UserController.changePassword()}"
+						oncomplete="PF('change_password_usr').hide();" /> <!-- update=":domain_table_form:" -->
+					<p:commandButton value="Cancel" onclick="PF('change_password_usr').hide();" type="button" />
+
+				</p:confirmDialog>
+				
+				<h:outputLabel value="You are logged in as #{UserController.username}" rendered="#{UserController.loggedIn}"/><br></br><br></br>
+				<p:commandButton value="#{msgs['user.label.deleteUser']}" disabled="#{UserController.loggedIn eq false}"					
+					onclick="PF('delete_confirm_usr').show();">
+				</p:commandButton>
+				<p:commandButton value="#{msgs['user.label.changePassword']}" disabled="#{UserController.loggedIn eq false}"					
+					onclick="PF('change_password_usr').show();">
+				</p:commandButton>
+			</h:form>			
+			<h:panelGrid columns="2">
+				<h:form>
+				<h:panelGrid columns="2" layout="block" rendered="#{UserController.loggedIn eq false}">				
+				    <h:outputLabel for="username" value="Username" />
+				    <p:inputText id="username" value="#{UserController.username}" required="true">
+				    	<p:ajax event="keyup" />
+				    </p:inputText>
+				    <h:message for="username" />
+				    <br />
+				    <h:outputLabel for="password" value="Password" />
+				    <p:password id="password" value="#{UserController.password}" required="true">
+				    	<p:ajax event="keyup" />
+				    </p:password>
+				    <h:message for="password" />
+				    <br />
+				    <p:commandButton value="Login" action="#{UserController.login}" />
+				    <h:messages globalOnly="true" />
+			    </h:panelGrid>
+			    </h:form>
+			    <h:form>
+			    <h:panelGrid columns="2" layout="block" rendered="#{UserController.loggedIn eq false}">				
+				    <h:outputLabel for="newuser" value="new user" />
+				    <p:inputText id="newuser" value="#{UserController.newUser}" required="true">
+				    	<p:ajax event="keyup" />
+				    </p:inputText>
+				    <h:message for="newuser" />
+				    <br />
+				    <h:outputLabel for="newpassword" value="new Password" />
+				    <p:password id="newpassword" value="#{UserController.newPassword}" required="true">
+				    	<p:ajax event="keyup" />
+				    </p:password>
+				    <h:message for="newpassword" />
+				    <br />
+				    <h:outputLabel for="passwordRepeat" value="Repeat password" />
+				    <p:password id="passwordRepeat" value="#{UserController.passwordRepeat}" required="true">
+				    	<p:ajax event="keyup" />
+				    </p:password>
+				    <h:message for="passwordRepeat" />
+				    <br />
+				    <p:commandButton value="createAccount" action="#{UserController.createAccount}" />
+				    <h:messages globalOnly="true" />
+			    </h:panelGrid>
+			    </h:form>
+			    </h:panelGrid>	
+			    <h:form id="users_form">
+			    <h:panelGrid rendered="#{UserController.loggedIn and UserController.isAdmin()}">
+			    		<p:dataTable id="users_table" var="user" value="#{UserController.userTableList}" rowKey="#{user.id}"
+						selection="#{UserController.selectedTableUser}" selectionMode="single" resizableColumns="true">
+							<p:column id="user_id" headerText="#{msgs['user.label.table.id']}">
+								<h:outputText value="#{user.id}" title="#{user.id}" />
+							</p:column>
+							<p:column id="username" headerText="#{msgs['user.label.table.username']}">
+								<h:outputText value="#{user.username}" title="#{user.username}" />
+							</p:column>
+							<p:column id="isAdmin" headerText="#{msgs['user.label.table.isadmin']}">
+								<h:selectBooleanCheckbox value="#{user.admin}">
+									<p:ajax listener="#{UserController.handleChangeAdmin}" update="users_form" />
+									<f:attribute name="myuser" value="#{user}" />
+								</h:selectBooleanCheckbox>
+							</p:column>
+							<p:column id="isVerified" headerText="#{msgs['user.label.table.isverified']}">
+								<h:selectBooleanCheckbox value="#{user.verified}">
+									<p:ajax listener="#{UserController.handleChangeVerified}" update="users_form" />
+									<f:attribute name="myuser" value="#{user}" />
+								</h:selectBooleanCheckbox>
+							</p:column>
+						</p:dataTable>
+			    </h:panelGrid>
+			    </h:form>
+		</ui:define>
+		<ui:define name="version">
+			<h:outputText value="${display_version}" />
+		</ui:define>
+	</ui:composition>
+</body>
+</html>

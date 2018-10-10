@@ -27,16 +27,19 @@
   You should have received a copy of the GNU Affero General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
   ###license-information-end###
-  -->
+  
+  persistence xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd" version="2.0" -->
 
-<persistence xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd" version="2.0">
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd" version="2.1">
 	<persistence-unit name="gpas" transaction-type="JTA">
-		<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>  
-		<jta-data-source>java:jboss/datasources/gpasDS</jta-data-source>	
+	<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>  
+	<jta-data-source>java:jboss/datasources/gpasDS</jta-data-source>	
+		<class>org.emau.icmvc.ganimed.ttp.psn.internal.PasswordConverter</class>
 		<class>org.emau.icmvc.ganimed.ttp.psn.model.PSN</class>
 		<class>org.emau.icmvc.ganimed.ttp.psn.model.PSNKey</class>
 		<class>org.emau.icmvc.ganimed.ttp.psn.model.PSNProject</class>
+		<class>org.emau.icmvc.ganimed.ttp.psn.model.RolleBean</class>
+		<class>org.emau.icmvc.ganimed.ttp.psn.model.USR</class>
 		<class>org.emau.icmvc.ganimed.ttp.gstats.ejb.Statistic</class>
 		<properties>
 			<property name="eclipselink.target-server" value="JBoss"/>

@@ -31,6 +31,7 @@ package org.emau.icmvc.ganimed.ttp.psn.dto;
  */
 
 import java.io.Serializable;
+import java.util.Date;
 
 import javax.xml.bind.annotation.XmlElement;
 
@@ -46,15 +47,18 @@ public class PSNDTO implements Serializable {
 	private String domain;
 	private String originalValue;
 	private String pseudonym;
+	private Long expiryDate;
+	private Boolean isExpired;
 
 	public PSNDTO() {
 	}
 
-	public PSNDTO(String domain, String originalValue, String pseudonym) {
+	public PSNDTO(String domain, String originalValue, String pseudonym, Long expiryDate) {
 		super();
 		this.domain = domain;
 		this.originalValue = originalValue;
 		this.pseudonym = pseudonym;
+		this.expiryDate = expiryDate;
 	}
 
 	/**
@@ -90,6 +94,31 @@ public class PSNDTO implements Serializable {
 	public void setPseudonym(String pseudonym) {
 		this.pseudonym = pseudonym;
 	}
+	
+	@XmlElement(required = true)
+	public Long getExpiryDate() {
+		return expiryDate;
+	}
+
+	public void setExpiryDate(Long expiryDate) {
+		this.expiryDate = expiryDate;
+	}
+
+	public Boolean getIsExpired() {
+		Date now = new Date();      
+		Long longTime = now.getTime()/1000;
+		if(this.expiryDate==null)
+			return false;
+		if(longTime>this.expiryDate)
+			isExpired=true;
+		else
+			isExpired=false;
+		return isExpired;
+	}
+
+	public void setIsExpired(Boolean isExpired) {
+		this.isExpired = isExpired;
+	}
 
 	@Override
 	public int hashCode() {
@@ -98,6 +127,7 @@ public class PSNDTO implements Serializable {
 		result = prime * result + ((domain == null) ? 0 : domain.hashCode());
 		result = prime * result + ((originalValue == null) ? 0 : originalValue.hashCode());
 		result = prime * result + ((pseudonym == null) ? 0 : pseudonym.hashCode());
+		result = prime * result + ((expiryDate == null) ? 0 : expiryDate.hashCode());
 		return result;
 	}
 
@@ -124,6 +154,11 @@ public class PSNDTO implements Serializable {
 			if (other.pseudonym != null)
 				return false;
 		} else if (!pseudonym.equals(other.pseudonym))
+			return false;
+		if (expiryDate == null) {
+			if (other.expiryDate != null)
+				return false;
+		} else if (!expiryDate.equals(other.expiryDate))
 			return false;
 		return true;
 	}

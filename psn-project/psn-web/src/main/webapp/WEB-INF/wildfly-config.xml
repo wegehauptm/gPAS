@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- <configuration>
+    <authentication-client xmlns="urn:elytron:1.0">
+        <authentication-rules>
+            <rule use-configuration="ejbConfig">
+                <match-host name="127.0.0.1"/>
+            </rule>
+        </authentication-rules>
+        <authentication-configurations>
+            <configuration name="ejbConfig">
+                <set-user-name name="admin"/>
+                <credentials>
+                    <clear-password password="pass"/>
+                </credentials>
+            </configuration>
+        </authentication-configurations>
+    </authentication-client>
+    <jboss-ejb-client xmlns="urn:jboss:wildfly-client-ejb:3.0">
+        <connections>
+            <connection uri="remote+http://127.0.0.1:8080" />
+        </connections>
+    </jboss-ejb-client>
+</configuration>-->
+<configuration>
+    <authentication-client xmlns="urn:elytron:1.0">
+        <authentication-rules>
+            <rule use-configuration="ejbConfig">
+                <match-host name="127.0.0.1"/>
+            </rule>
+        </authentication-rules>
+        <authentication-configurations>
+            <configuration name="ejbConfig">
+                <set-user-name name="admin"/>
+                <credentials>
+                    <clear-password password="pass"/>
+                </credentials>
+            </configuration>
+        </authentication-configurations>
+    </authentication-client>
+    <jboss-ejb-client xmlns="urn:jboss:wildfly-client-ejb:3.0">
+        <connections>
+            <connection uri="remote+http://127.0.0.1:8080" />
+        </connections>
+    </jboss-ejb-client>
+</configuration>

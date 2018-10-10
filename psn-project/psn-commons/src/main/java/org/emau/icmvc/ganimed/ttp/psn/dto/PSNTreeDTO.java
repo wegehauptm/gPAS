@@ -38,7 +38,7 @@ import java.util.List;
  * dto for PsnTreeNode
  * 
  * @author wolffr
- * 
+ * TODO  hashCode und equals Wegehaupt
  */
 public class PSNTreeDTO extends PSNDTO {
 
@@ -48,8 +48,8 @@ public class PSNTreeDTO extends PSNDTO {
 	public PSNTreeDTO() {
 	}
 
-	public PSNTreeDTO(String domain, String pseudonym) {
-		super(domain, null,pseudonym);
+	public PSNTreeDTO(String domain, String pseudonym, Long expiryDate) {
+		super(domain, null,pseudonym, expiryDate);
 	}
 	
 	public List<PSNTreeDTO> getChildren() {

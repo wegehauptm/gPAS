@@ -40,11 +40,14 @@
 		</ui:define>
 		<ui:define name="header_title">#{msgs['general.headerTitle']}</ui:define>
 		<ui:define name="title">
-			<h1>
-				<h:outputFormat value="#{msgs['general.title']}">
-					<f:param value="${display_version}" />
-				</h:outputFormat>
-			</h1>
+			    <h:form>
+	    			<h1>
+						<h:outputFormat value="#{msgs['general.title']}">
+							<f:param value="${display_version}" />
+						</h:outputFormat>
+					</h1>
+			        <p:commandButton value="logout" action="#{UserController.logout}" disabled="#{UserController.loggedIn eq false}"/>
+			    </h:form>
 		</ui:define>
 		<ui:define name="info">
 			<p:tabMenu activeIndex="0">
@@ -52,6 +55,7 @@
 				<p:menuitem value="#{msgs['label.navigation.psn']}" url="psn_management.xhtml" />
 				<p:menuitem value="#{msgs['label.navigation.File']}" url="batch_processing.xhtml" />
 				<p:menuitem value="#{msgs['label.navigation.stat']}" url="statistic.xhtml" />
+				<p:menuitem value="#{msgs['label.navigation.users']}" url="users.xhtml" />
 			</p:tabMenu>
 		</ui:define>
 		<ui:define name="content">

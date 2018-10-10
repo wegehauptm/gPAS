@@ -33,7 +33,9 @@ package org.emau.icmvc.ganimed.ttp.psn;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.security.PermitAll;
 import javax.ejb.Local;
+import javax.ejb.EJB;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
 import javax.jws.WebService;
@@ -67,7 +69,9 @@ import org.emau.icmvc.ganimed.ttp.psn.model.PSNKey_;
 import org.emau.icmvc.ganimed.ttp.psn.model.PSNProject;
 //import org.emau.icmvc.ganimed.ttp.psn.model.PSN_;
 import org.emau.icmvc.ganimed.ttp.psn.model.PSN_;
+import org.jboss.security.annotation.SecurityDomain;
 
+import org.jboss.ws.api.annotation.WebContext;
 /**
  * webservice for domains (psn-projects)
  * <p>
@@ -81,7 +85,11 @@ import org.emau.icmvc.ganimed.ttp.psn.model.PSN_;
 @Stateless
 @Local(DomainManagerLocal.class)
 @Remote(DomainManager.class)
-@PersistenceContext(name = "psn")
+@PersistenceContext(name = "psn") 
+@WebContext(authMethod="BASIC", secureWSDLAccess = false) //contextRoot="/vmwWS", urlPattern ="/vmw", 
+@SecurityDomain(value="security-beispiel-domain")
+@PermitAll
+@EJB(name="DMN", beanInterface=DomainManager.class)
 public class DomainManagerBean implements DomainManagerLocal, DomainManager {
 
 	private static final Logger logger = Logger.getLogger(DomainManagerBean.class);

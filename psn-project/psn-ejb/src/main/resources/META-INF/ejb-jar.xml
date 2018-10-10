@@ -32,4 +32,47 @@
 <ejb-jar xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:ejb="http://java.sun.com/xml/ns/javaee/ejb-jar_3_0.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/ejb-jar_3_1.xsd" version="3.1">
   <module-name>psn-ejb</module-name>
   <display-name>psn-ejb</display-name>
+  
+  <!-- new -->
+  
+  <enterprise-beans>
+		<session>
+			<description>
+				<![CDATA[Die Methoden dieser Session-Bean sind für unterschiedliche Rollen zugelassen.]]>
+			</description>
+			<display-name>PSNManagerBean</display-name>
+
+			<ejb-name>PSNManagerBean</ejb-name>
+
+			<business-remote>org.emau.icmvc.ganimed.ttp.psn.PSNManager</business-remote>
+			<ejb-class>org.emau.icmvc.ganimed.ttp.psn.PSNManagerBean</ejb-class>
+			<session-type>Stateless</session-type>
+			<transaction-type>Container</transaction-type>
+
+			<!--SessionContext-Injection -->
+			<resource-env-ref>
+				<resource-env-ref-name>EgalWasHierSteht</resource-env-ref-name>
+ 				<resource-env-ref-type>javax.ejb.SessionContext</resource-env-ref-type>
+				<mapped-name>java:comp/EJBContext</mapped-name>
+				<injection-target>
+					<injection-target-class>org.emau.icmvc.ganimed.ttp.psn.PSNManagerBean</injection-target-class>
+					<injection-target-name>sessionContext</injection-target-name>
+			  	</injection-target>
+			</resource-env-ref>
+
+		</session>
+	</enterprise-beans>
+  
+  <!-- new end -->
+    <assembly-descriptor>
+<!-- new -->
+    <security-role>
+      <role-name>Admin</role-name>
+    </security-role>
+
+    <security-role>
+      <role-name>User</role-name>
+    </security-role>
+  </assembly-descriptor>
+<!-- new -->
 </ejb-jar>

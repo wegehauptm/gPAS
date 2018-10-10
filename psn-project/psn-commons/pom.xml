@@ -7,5 +7,42 @@
 		<artifactId>psn-project</artifactId>
 		<version>1.7.10</version>
 	</parent>
+	<!-- neu. Für Java 9 -->
+	<build>
+	<plugins>
+		<plugin>
+	    <groupId>org.apache.maven.plugins</groupId>
+	    <artifactId>maven-compiler-plugin</artifactId>
+	    <configuration>
+	        <source>9</source>
+	        <target>9</target>
+	        <jdkToolchain>
+	            <version>9</version>
+	        </jdkToolchain>
+	        <compilerArgs>
+            	<arg>--add-modules</arg>
+            	<arg>java.xml.bind</arg>
+          	</compilerArgs>
+	    </configuration>
+	</plugin>
+	</plugins>
+	</build>
+	<dependencies>		
+		<dependency>
+		    <groupId>javax.jws</groupId>
+		    <artifactId>javax.jws-api</artifactId>
+		    <version>1.1</version>
+		</dependency>
+		<dependency>
+		  <groupId>org.glassfish.jaxb</groupId>
+		  <artifactId>jaxb-runtime</artifactId>
+		  <version>2.3.0.1</version>
+		</dependency>
+	</dependencies>
+	<properties>
+	   <maven.compiler.source>9</maven.compiler.source>
+	   <maven.compiler.target>9</maven.compiler.target>
+	</properties>
+	<!-- Ende Java 9 -->
 
 </project>

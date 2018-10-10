@@ -46,15 +46,17 @@ public class PSNKey implements Serializable {
 
 	private static final long serialVersionUID = 8958544740633136680L;
 	private String originalValue;
+	private String pseudonym;//neu
     @Column(name = "domain", insertable = false, updatable = false)
 	private String domain;
 
 	public PSNKey() {
 	}
 
-	public PSNKey(String originalValue, String domain) {
+	public PSNKey(String originalValue, String domain, String pseudonym) {
 		this.originalValue = originalValue;
 		this.domain = domain;
+		this.pseudonym = pseudonym;//neu Wegehaupt
 	}
 
 	public String getOriginValue() {
@@ -64,6 +66,10 @@ public class PSNKey implements Serializable {
 	public String getDomain() {
 		return domain;
 	}
+	
+	public String getPseudonym() {
+		return pseudonym;
+	}
 
 	@Override
 	public int hashCode() {
@@ -71,6 +77,7 @@ public class PSNKey implements Serializable {
 		int result = 1;
 		result = prime * result + (domain == null ? 0 : domain.hashCode());
 		result = prime * result + (originalValue == null ? 0 : originalValue.hashCode());
+		result = prime * result + (pseudonym == null ? 0 : pseudonym.hashCode());
 		return result;
 	}
 
@@ -98,6 +105,13 @@ public class PSNKey implements Serializable {
 				return false;
 			}
 		} else if (!originalValue.equals(other.originalValue)) {
+			return false;
+		}
+		if (pseudonym == null) {
+			if (other.pseudonym != null) {
+				return false;
+			}
+		} else if (!pseudonym.equals(other.pseudonym)) {
 			return false;
 		}
 		return true;

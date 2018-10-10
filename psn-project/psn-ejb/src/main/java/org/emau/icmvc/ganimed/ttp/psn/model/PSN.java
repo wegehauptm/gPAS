@@ -50,7 +50,7 @@ import org.emau.icmvc.ganimed.ttp.psn.dto.PSNDTO;
  * 
  */
 @Entity
-@Table(name = "psn", uniqueConstraints = @UniqueConstraint(columnNames = { "domain", "pseudonym" }, name = "domain_pseudonym"))
+@Table(name = "psn", uniqueConstraints = @UniqueConstraint(columnNames = { "domain", "originalValue", "pseudonym" }, name = "domain_pseudonym"))//columnNames = { "domain", "pseudonym" }
 public class PSN implements Serializable {
 
 	private static final long serialVersionUID = -4303062729589967516L;
@@ -60,7 +60,9 @@ public class PSN implements Serializable {
 	@JoinColumn(name = "domain", referencedColumnName = "domain")
 	@MapsId("domain")
 	private PSNProject psnProject;
-	private String pseudonym;
+	//private String pseudonym;
+	private Long createDate;
+	private Long expiryDate;
 
 	/**
 	 * this constructor is only for reflection-based instantiation - do not use in other cases!
@@ -68,27 +70,38 @@ public class PSN implements Serializable {
 	public PSN() {
 	}
 
-	public PSN(PSNProject parent, String originalValue, String pseudonym) {
+	public PSN(PSNProject parent, String originalValue, String pseudonym, Long createDate, Long expiryDate) {
 		super();
-		this.key = new PSNKey(originalValue, parent.getDomain());
-		this.pseudonym = pseudonym;
+		this.key = new PSNKey(originalValue, parent.getDomain(), pseudonym);
+		//this.pseudonym = pseudonym;
 		this.psnProject = parent;
+		this.createDate = createDate;
+		this.expiryDate = expiryDate;
 	}
 
 	public PSNKey getKey() {
 		return key;
 	}
 
-	public String getPseudonym() {
-		return pseudonym;
-	}
+//	public String getPseudonym() {
+//		return this.key.getPseudonym();
+//	}
 
 	public PSNProject getPSNProject() {
 		return psnProject;
 	}
 
 	public PSNDTO toPSNDTO() {
-		return new PSNDTO(key.getDomain(), key.getOriginValue(), pseudonym);
+		System.err.println("----------converting toPSNDTO:" +key.getOriginValue()+" "+key.getPseudonym()+" "+expiryDate+"----------");
+		return new PSNDTO(key.getDomain(), key.getOriginValue(), key.getPseudonym(), expiryDate);
+	}		
+
+	public Long getCreateDate() {
+		return createDate;
+	}
+
+	public Long getExpiryDate() {
+		return expiryDate;
 	}
 
 	@Override
@@ -96,6 +109,7 @@ public class PSN implements Serializable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (key == null ? 0 : key.hashCode());
+		result = prime * result + (createDate == null ? 0 : createDate.hashCode());
 		return result;
 	}
 
@@ -116,6 +130,8 @@ public class PSN implements Serializable {
 				return false;
 			}
 		} else if (!key.equals(other.key)) {
+			return false;
+		} else if(!createDate.equals(other.createDate)) {
 			return false;
 		}
 		return true;

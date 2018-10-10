@@ -41,12 +41,17 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.faces.event.ActionEvent;
+import javax.inject.Inject;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 import org.emau.icmvc.ganimed.ttp.psn.DomainManager;
 import org.emau.icmvc.ganimed.ttp.psn.PSNManager;
+import org.emau.icmvc.ganimed.ttp.psn.UserManager;
 import org.emau.icmvc.ganimed.ttp.psn.dto.DomainDTO;
 import org.emau.icmvc.ganimed.ttp.psn.dto.HashMapWrapper;
 import org.emau.icmvc.ganimed.ttp.psn.dto.PSNDTO;
@@ -60,6 +65,7 @@ import org.emau.icmvc.ganimed.ttp.psn.exceptions.UnknownDomainException;
 import org.emau.icmvc.ganimed.ttp.psn.exceptions.UnknownValueException;
 import org.emau.icmvc.ganimed.ttp.psn.exceptions.ValueIsAnonymisedException;
 import org.emau.icmvc.ganimed.ttp.psn.generator.GeneratorProperties;
+//import org.jboss.as.naming.InitialContext;
 import org.primefaces.model.DefaultTreeNode;
 import org.primefaces.model.TreeNode;
 import org.slf4j.Logger;
@@ -71,12 +77,14 @@ public class PsnControllerV2 {
 
 	private final Logger logger = LoggerFactory.getLogger(PsnControllerV2.class);
 
-	@EJB(lookup = "java:global/gpas/psn-ejb/PSNManagerBean!org.emau.icmvc.ganimed.ttp.psn.PSNManager")
+//	@EJB(lookup = "java:global/gpas/psn-ejb/PSNManagerBean!org.emau.icmvc.ganimed.ttp.psn.PSNManager")
 	private PSNManager psnManager;
 
 	@EJB(lookup = "java:global/gpas/psn-ejb/DomainManagerBean!org.emau.icmvc.ganimed.ttp.psn.DomainManager")
 	private DomainManager domainManager;
 
+	@ManagedProperty(value="#{UserController}")
+	private UserController userController;
 	/**
 	 * bundle of all info/error messages used in the application
 	 */
@@ -142,7 +150,7 @@ public class PsnControllerV2 {
 	@PostConstruct
 	public void init() {
 		messages = ResourceBundle.getBundle("messages");
-		updateAll();
+		updateAll();				
 	}
 
 	/**
@@ -151,6 +159,22 @@ public class PsnControllerV2 {
 	public void updateAll() {
 		domains = domainManager.listDomains();
 		selectedDomain = null;
+		
+		System.err.println("----------------------------update called on PsnControllerV2----------------------------");
+		try {
+			System.err.println("----------------------------new InitialContext (in PSN) is "+userController.getSecurityContext().hashCode()+"----------------------------");
+			if(userController.getSecurityContext()!=null) {
+				psnManager = (PSNManager) userController.getSecurityContext().lookup("ejb:gpas/psn-ejb/PSNManagerBean!org.emau.icmvc.ganimed.ttp.psn.PSNManager");//ejb:global/ new
+			}
+			else {
+				psnManager = (PSNManager) new InitialContext().lookup("ejb:gpas/psn-ejb/PSNManagerBean!org.emau.icmvc.ganimed.ttp.psn.PSNManager");//ejb:global/ new;
+			}
+		} catch (NamingException e) {
+			// TODO Auto-generated catch block
+			System.err.println("----------------------------psnManger is propably null after lookup----------------------------");
+			e.printStackTrace();
+		}  
+		
 		updatePsnList();
 
 	}
@@ -345,6 +369,11 @@ public class PsnControllerV2 {
 					new FacesMessage(FacesMessage.SEVERITY_ERROR, messages.getString("domain.error.unkownDomain"), e.getMessage()));
 			if (logger.isErrorEnabled())
 				logger.error("unexpected error", e);
+		} catch (Exception e) {
+			context.addMessage("pseudonymisation",//recently added
+					new FacesMessage(FacesMessage.SEVERITY_ERROR, messages.getString("general.error.unexpectedError"), e.getMessage()));
+			if (logger.isErrorEnabled())
+				logger.error("", e);
 		}
 	}
 
@@ -388,6 +417,10 @@ public class PsnControllerV2 {
 			context.addMessage("depseudonymisation", new FacesMessage(FacesMessage.SEVERITY_ERROR, e.getLocalizedMessage(), e.getMessage()));
 			if (logger.isErrorEnabled())
 				logger.error("", e);
+		} catch (Exception e) {
+			context.addMessage("depseudonymisation", new FacesMessage(FacesMessage.SEVERITY_ERROR, e.getLocalizedMessage(), e.getMessage()));
+			if (logger.isErrorEnabled())
+				logger.error("", e);
 		}
 	}
 
@@ -403,6 +436,7 @@ public class PsnControllerV2 {
 			logger.debug("valueOfPseudonym called for pseudonymDecode '" + pseudonym + "' and Domain '" + selectedDomain + "'");
 		}
 		try {
+			System.err.println("--------------------------------------------psnManager is null?-------------------------------------------"+psnManager.hashCode());
 			String originalValue = psnManager.getValueForDecode(pseudonymDecode, selectedDomain.getDomain());
 			Object[] args2 = { originalValue, pseudonymDecode };
 			if (logger.isInfoEnabled()) {
@@ -429,6 +463,10 @@ public class PsnControllerV2 {
 			if (logger.isErrorEnabled())
 				logger.error("", e);
 		} catch (ValueIsAnonymisedException e) {
+			context.addMessage("depseudonymisationDecode", new FacesMessage(FacesMessage.SEVERITY_ERROR, e.getLocalizedMessage(), e.getMessage()));
+			if (logger.isErrorEnabled())
+				logger.error("", e);
+		} catch (Exception e) {
 			context.addMessage("depseudonymisationDecode", new FacesMessage(FacesMessage.SEVERITY_ERROR, e.getLocalizedMessage(), e.getMessage()));
 			if (logger.isErrorEnabled())
 				logger.error("", e);
@@ -709,10 +747,12 @@ public class PsnControllerV2 {
 	}
 
 	public String getSearchValue() {
+		System.err.println("--------------------------------getting searchValue "+searchValue+" --------------------------------");
 		return searchValue;
 	}
 
 	public void setSearchValue(String searchValue) {
+		System.err.println("--------------------------------new searchValue "+searchValue+" set--------------------------------");
 		this.searchValue = searchValue;
 	}
 
@@ -742,5 +782,13 @@ public class PsnControllerV2 {
 
 	public void setSearchValueInDomains(String searchValueInDomains) {
 		this.searchValueInDomains = searchValueInDomains;
+	}
+	
+	public UserController getUserController() {
+		return userController;
+	}
+
+	public void setUserController(UserController userController) {
+		this.userController = userController;
 	}
 }

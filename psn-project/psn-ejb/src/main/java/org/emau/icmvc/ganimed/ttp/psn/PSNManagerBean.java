@@ -36,6 +36,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,11 +45,17 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.Resource;
+import javax.annotation.security.DeclareRoles;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+import javax.annotation.security.RunAs;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.ejb.EJB;
 import javax.ejb.Remote;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -65,8 +72,6 @@ import javax.persistence.criteria.Root;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Priority;
 import org.emau.icmvc.ganimed.ttp.psn.crypto.AESUtil;
-import org.emau.icmvc.ganimed.ttp.psn.crypto.RSAUtil;
-import org.emau.icmvc.ganimed.ttp.psn.dto.DomainDTO;
 import org.emau.icmvc.ganimed.ttp.psn.dto.DomainLightDTO;
 import org.emau.icmvc.ganimed.ttp.psn.dto.HashMapWrapper;
 import org.emau.icmvc.ganimed.ttp.psn.dto.PSNTreeDTO;
@@ -90,8 +95,10 @@ import org.emau.icmvc.ganimed.ttp.psn.model.PSNKey;
 import org.emau.icmvc.ganimed.ttp.psn.model.PSNKey_;
 import org.emau.icmvc.ganimed.ttp.psn.model.PSNProject;
 import org.emau.icmvc.ganimed.ttp.psn.model.PSN_;
+import org.jboss.ejb3.annotation.RunAsPrincipal;
+import org.jboss.ejb3.annotation.SecurityDomain;
 
-
+import org.jboss.ws.api.annotation.WebContext;
 /**
  * webservice for pseudonyms
  * 
@@ -103,6 +110,11 @@ import org.emau.icmvc.ganimed.ttp.psn.model.PSN_;
 @Stateless
 @Remote(PSNManager.class)
 @PersistenceContext(name = "psn")
+@DeclareRoles(value={"Admin","User"})
+@SecurityDomain(value="security-beispiel-domain")//simple-auth
+@WebContext(authMethod="BASIC", secureWSDLAccess = false)
+@PermitAll
+@EJB(name="PSN", beanInterface=PSNManager.class)
 public class PSNManagerBean implements PSNManager {
 
 	private static final String PSN_NOT_FOUND = "*** PSN NOT FOUND ***";
@@ -116,6 +128,17 @@ public class PSNManagerBean implements PSNManager {
 	private DomainManagerLocal domainManager;
 	private static final int MAX_ATTEMPS_BEFORE_RESEED = 10;
 	private static final int MAX_RESEEDS = 5;
+	
+	@Resource()
+	private SessionContext sessionContext = null;
+
+	public SessionContext getSessionContext() {
+		return sessionContext;
+	}
+
+	public void setSessionContext(SessionContext sessionContext) {
+		this.sessionContext = sessionContext;
+	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -143,7 +166,7 @@ public class PSNManagerBean implements PSNManager {
 			PSNProject parent = getPSNProject(domain);
 			result = createPSN(parent, value, null);
 		}
-		return result.getPseudonym();
+		return result.getKey().getPseudonym();//getKey() hinzugefügt
 	}
 
 	/**
@@ -259,7 +282,14 @@ public class PSNManagerBean implements PSNManager {
 					done = true;
 				}
 			} while (!done);
-			result = new PSN(parent, value, pseudonym);
+			Date now = new Date();      
+			Long longTime = now.getTime()/1000;
+			result = new PSN(
+					parent, 
+					value,
+					pseudonym, 
+					longTime.longValue(), 
+					parent.getProperties().get(GeneratorProperties.EXPIRY_TIME_OF_PSN)!=null?longTime.longValue()+Long.parseLong(parent.getProperties().get(GeneratorProperties.EXPIRY_TIME_OF_PSN)):null);
 			em.persist(result);
 			parent.getPsnList().add(result);
 		}
@@ -291,19 +321,25 @@ public class PSNManagerBean implements PSNManager {
 	}
 
 	private List<PSN> getPSNObjects(String domain, String pseudonym) {
+		Date now = new Date();      
+		Long longTime = now.getTime()/1000;
+		
 		CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
 		CriteriaQuery<PSN> criteriaQuery = criteriaBuilder.createQuery(PSN.class);
 		Root<PSN> root = criteriaQuery.from(PSN.class);
-		Predicate predicate = criteriaBuilder.and(criteriaBuilder.equal(root.get(PSN_.pseudonym), pseudonym),
-				criteriaBuilder.equal(root.get(PSN_.key).get(PSNKey_.domain), domain));
-		criteriaQuery.select(root).where(predicate);
+		Predicate predicate1 = criteriaBuilder.and(criteriaBuilder.equal(root.get(PSN_.key).get(PSNKey_.pseudonym), pseudonym),//get(PSN_.key).get(PSNKey_.pseudonym) hinzugefügt
+				criteriaBuilder.equal(root.get(PSN_.key).get(PSNKey_.domain), domain));		
+		Predicate predicate2 = criteriaBuilder.greaterThan(root.get(PSN_.expiryDate), longTime);//Hinzugefügt Wegehaupt 2018-10		
+		criteriaQuery.select(root).where(predicate1).where(predicate2);//geändert Wegehaupt 2018-10
+		System.err.println(">>>>>>>>>>>>>>>>>>>>getPSNObjects returns "+em.createQuery(criteriaQuery).getResultList().size()+" entries");
 		return em.createQuery(criteriaQuery).getResultList();
 	}
 	
 	private List<PSN> getAllPSNObjects(String domain) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("get all entries for domain " + domain);
-		}		
+		}
+		System.err.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>get all entries for domain " + domain);
 		CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
 		CriteriaQuery<PSN> criteriaQuery = criteriaBuilder.createQuery(PSN.class);
 		Root<PSN> root = criteriaQuery.from(PSN.class);
@@ -350,7 +386,7 @@ public class PSNManagerBean implements PSNManager {
 		Expression<PSNProject> parentExpression = root.get(PSN_.psnProject);
 		
 		Predicate predicate1 = parentExpression.in(localDomainListString);		
-		Predicate predicate2 = criteriaBuilder.equal(root.get(PSN_.pseudonym),pseudonym);
+		Predicate predicate2 = criteriaBuilder.equal(root.get(PSN_.key).get(PSNKey_.pseudonym),pseudonym);//vorher root.get(PSN_.pseudonym)
 		System.err.println("pseudonym="+pseudonym);
 		Predicate predicate3=criteriaBuilder.and(predicate1, predicate2);
 				
@@ -394,14 +430,14 @@ public class PSNManagerBean implements PSNManager {
 			e.printStackTrace();
 		}
 		PSN result = getPSN(value, domain);
-		return result.getPseudonym();
+		return result.getKey().getPseudonym();//getKey() hinzugefügt
 	}
 
 	private PSN getPSN(String value, String domain) throws UnknownValueException {		
 		// zusammengesetzter primary key
 		
 		PSN result = null;
-		PSNKey key = new PSNKey(value, domain);
+		PSNKey key = new PSNKey(value, domain,"");//stimmt das so?
 		
 		try {
 			if(getPSNProject(domain).getProperties().get(GeneratorProperties.MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS)!=null && 
@@ -409,7 +445,7 @@ public class PSNManagerBean implements PSNManager {
 				result = findKeyforUniqueDomain(key);							
 			}
 			else {
-				result = em.find(PSN.class, key);
+				result = findKeyforNotUniqueDomain(key);
 			}
 		} catch (UnknownDomainException e) {
 			// TODO Auto-generated catch block
@@ -442,17 +478,17 @@ public class PSNManagerBean implements PSNManager {
 			PSN origEntity = getPSN(value, domain);
 			if (origEntity != null) {
 				try {
-					String anonym = getOrCreatePseudonymFor(domain + AnonymDomain.DELIMITER + origEntity.getPseudonym(), AnonymDomain.NAME);
+					String anonym = getOrCreatePseudonymFor(domain + AnonymDomain.DELIMITER + origEntity.getKey().getPseudonym(), AnonymDomain.NAME);//getKey() hinzugefügt
 
 					PSNProject parent = origEntity.getPSNProject();
 					em.remove(origEntity);
 					parent.getPsnList().remove(origEntity);
 					em.flush();
 
-					insertValuePseudonymPair(anonym, origEntity.getPseudonym(), parent.getDomain());
+					insertValuePseudonymPair(anonym, origEntity.getKey().getPseudonym(), parent.getDomain());//getKey() hinzugefügt
 
 					if (logger.isInfoEnabled()) {
-						logger.info("pseudonym '" + origEntity.getPseudonym() + "' within domain '" + domain + "' anonymised");
+						logger.info("pseudonym '" + origEntity.getKey().getPseudonym() + "' within domain '" + domain + "' anonymised");//getKey() hinzugefügt
 					}
 				} catch (Exception e) {
 					logger.error("error while anonymising psn entry", e);
@@ -541,9 +577,11 @@ public class PSNManagerBean implements PSNManager {
 	 * @return decoded original value for given pseudonym
 	 */
 	@Override
+	@RolesAllowed("Admin")
 	public String getValueForDecode(String psn, String domain)
 			throws InvalidPSNException, PSNNotFoundException, InvalidGeneratorException, UnknownDomainException, ValueIsAnonymisedException {
 		String result = "";
+		logger.info ("Caller: '" + this.sessionContext.getCallerPrincipal().getName() +"'");
 		if (logger.isDebugEnabled()) {
 			logger.debug("find value for pseudonym '" + psn + "' within domain '" + domain + "'");
 		}
@@ -617,8 +655,8 @@ public class PSNManagerBean implements PSNManager {
 			HashSet<String> allPseudonyms = new HashSet<String>((int) Math.ceil((psns.size() + values.size()) / 0.75));
 			HashMap<String, String> valuePsnMap = new HashMap<String, String>((int) Math.ceil((psns.size() + values.size()) / 0.75));
 			for (PSN psn : psns) {
-				valuePsnMap.put(psn.getKey().getOriginValue(), psn.getPseudonym());
-				allPseudonyms.add(psn.getPseudonym());
+				valuePsnMap.put(psn.getKey().getOriginValue(), psn.getKey().getPseudonym());//getKey() hinzugefügt
+				allPseudonyms.add(psn.getKey().getPseudonym());//getKey() hinzugefügt
 			}
 			int count = 0;
 			int countForBeep = values.size() / 50;
@@ -628,7 +666,7 @@ public class PSNManagerBean implements PSNManager {
 				if (pseudonym != null) {
 					result.put(value, pseudonym);
 				} else {
-					pseudonym = createPSN(parent, value, allPseudonyms).getPseudonym();
+					pseudonym = createPSN(parent, value, allPseudonyms).getKey().getPseudonym();//getKey() hinzugefügt
 					result.put(value, pseudonym);
 					valuePsnMap.put(value, pseudonym);
 					allPseudonyms.add(pseudonym);
@@ -677,7 +715,7 @@ public class PSNManagerBean implements PSNManager {
 			// genug platz, damit kein rehash passiert
 			HashMap<String, String> psnValueMap = new HashMap<String, String>((int) Math.ceil(psns.size() / 0.75));
 			for (PSN psn : psns) {
-				psnValueMap.put(psn.getPseudonym(), psn.getKey().getOriginValue());
+				psnValueMap.put(psn.getKey().getPseudonym(), psn.getKey().getOriginValue());//getKey() hinzugefügt
 			}
 			for (String pseudonym : psnList) {
 				String value = psnValueMap.get(pseudonym);
@@ -724,7 +762,7 @@ public class PSNManagerBean implements PSNManager {
 			// genug platz, damit kein rehash passiert
 			HashMap<String, String> valuePsnMap = new HashMap<String, String>((int) Math.ceil(psns.size() / 0.75));
 			for (PSN psn : psns) {
-				valuePsnMap.put(psn.getKey().getOriginValue(), psn.getPseudonym());
+				valuePsnMap.put(psn.getKey().getOriginValue(), psn.getKey().getPseudonym());//getKey() hinzugefügt
 			}
 			for (String value : values) {
 				String pseudonym = valuePsnMap.get(value);
@@ -747,7 +785,7 @@ public class PSNManagerBean implements PSNManager {
 		HashMap<String, String> result = new HashMap<String, String>();
 		List<PSN> psnList = getAllPSNObjectsForValuePrefix(domain, valuePrefix);
 		for (PSN psn : psnList) {
-			result.put(psn.getKey().getOriginValue(), psn.getPseudonym());
+			result.put(psn.getKey().getOriginValue(), psn.getKey().getPseudonym());//getKey() hinzugefügt
 		}
 		return new HashMapWrapper<String, String>(result);
 	}
@@ -771,18 +809,18 @@ public class PSNManagerBean implements PSNManager {
 				getPSNProject(domain).getProperties().get(GeneratorProperties.MEMBER_OF_DOMAINS_WITH_UNIQUE_PSNS).equals("true")) {
 			isUniqueDomain=true;							
 		}
-		PSNKey key = new PSNKey(value, domain);
+		PSNKey key = new PSNKey(value, domain,"");//stimmt das so?
 		PSN psn=null;
 		
 		if(isUniqueDomain) {	//new Wegehaupt 2018
 			psn=findKeyforUniqueDomain(key);}
 		else {
-			psn = em.find(PSN.class, key);}
+			psn = findKeyforNotUniqueDomain(key);}
 		
 		//PSN psn = em.find(PSN.class, key);
 		
 		if (psn != null) {
-			if (psn.getPseudonym().equals(pseudonym)) {
+			if (psn.getKey().getPseudonym().equals(pseudonym)) {//getKey() hinzugefügt
 				logger.warn("pseudonym for value '" + value + "' already exists within domain '" + domain + "'");
 				return;
 			} else {
@@ -798,7 +836,16 @@ public class PSNManagerBean implements PSNManager {
 			throw new DBException(message);
 		}
 		synchronized (emSynchronizerDummy) {
-			psn = new PSN(parent, value, pseudonym);
+			//psn = new PSN(parent, value, pseudonym);
+			Date now = new Date();      
+			Long longTime = now.getTime()/1000;
+			psn = new PSN(
+					parent, 
+					value,
+					pseudonym, 
+					longTime.longValue(), 
+					parent.getProperties().get(GeneratorProperties.EXPIRY_TIME_OF_PSN)!=null?longTime.longValue()+Long.parseLong(parent.getProperties().get(GeneratorProperties.EXPIRY_TIME_OF_PSN)):null);
+			
 			em.persist(psn);
 			parent.getPsnList().add(psn);
 		}
@@ -808,6 +855,7 @@ public class PSNManagerBean implements PSNManager {
 	}
 
 	//This method is (also) used by the frontend when inserting just ONE pair.
+	//Changed Würzburg 2018
 	@Override
 	public void insertValuePseudonymPairs(HashMapWrapper<String, String> pairs, String domain)
 			throws DBException, InvalidGeneratorException, InvalidPSNException, UnknownDomainException {
@@ -838,16 +886,16 @@ public class PSNManagerBean implements PSNManager {
 				PSNKey key=null;
 				PSN psn=null;
 				if(exchangeOrigValue) {		//new Wegehaupt 2018
-					key = new PSNKey(getNewOrigValue(entry.getKey()), domain);}
+					key = new PSNKey(getNewOrigValue(entry.getKey()), domain,"");}//stimmt das so?
 				else {
-					key = new PSNKey(entry.getKey(), domain);}				
+					key = new PSNKey(entry.getKey(), domain,"");}//stimmt das so?
 				if(isUniqueDomain) {	//new Wegehaupt 2018
 					psn=findKeyforUniqueDomain(key);}
 				else {
-					psn = em.find(PSN.class, key);}
+					psn = findKeyforUniqueDomain(key);}
 				
 				if (psn != null) {
-					if (psn.getPseudonym().equals(entry.getValue())) {
+					if (psn.getKey().getPseudonym().equals(entry.getValue())) {//getKey() hinzugefügt
 						logger.warn("pseudonym for value '" + entry.getKey() + "' already exists within domain '" + domain + "'");
 						duplicates.add(entry.getKey());
 					} else {
@@ -869,10 +917,14 @@ public class PSNManagerBean implements PSNManager {
 			synchronized (emSynchronizerDummy) {
 				for (Entry<String, String> entry : pairs.getMap().entrySet()) {
 					PSN psn=null;
-					if(exchangeOrigValue)
-						psn = new PSN(parent, getNewOrigValue(entry.getKey()), entry.getValue());//changed Wegehaupt 2018
-					else
-						psn = new PSN(parent, entry.getKey(), entry.getValue());//changed Wegehaupt 2018
+					
+					Date now = new Date();      
+					Long longTime = now.getTime()/1000;					
+					
+					if(exchangeOrigValue) {
+						psn = new PSN(parent, getNewOrigValue(entry.getKey()), entry.getValue(),longTime.longValue(),parent.getProperties().get(GeneratorProperties.EXPIRY_TIME_OF_PSN)!=null?longTime.longValue()+Long.parseLong(parent.getProperties().get(GeneratorProperties.EXPIRY_TIME_OF_PSN)):null);}//changed Wegehaupt 2018
+					else {
+						psn = new PSN(parent, entry.getKey(), entry.getValue(),longTime.longValue(),parent.getProperties().get(GeneratorProperties.EXPIRY_TIME_OF_PSN)!=null?longTime.longValue()+Long.parseLong(parent.getProperties().get(GeneratorProperties.EXPIRY_TIME_OF_PSN)):null);}//changed Wegehaupt 2018
 					em.persist(psn);
 					parent.getPsnList().add(psn);
 				}
@@ -902,12 +954,36 @@ public class PSNManagerBean implements PSNManager {
 		PSN result=null;
 		
 		for(String uniqueDomain:localDomainListString) {
-			key = new PSNKey(origValue, uniqueDomain);
-			result = em.find(PSN.class, key);
-			if(result!=null) break;
+			key = new PSNKey(origValue, uniqueDomain,"");//stimmt das so?
+			result = findKeyforNotUniqueDomain(key);
+			if(result!=null)
+				break;
 		}
 		return result;
 	}
+	
+	//TODO
+	private PSN findKeyforNotUniqueDomain(PSNKey key) {
+		String origValue=key.getOriginValue();
+		PSN result=null;
+		Date now = new Date(); 
+		Long longTime = now.getTime()/1000;
+		
+		CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+		CriteriaQuery<PSN> criteriaQuery = criteriaBuilder.createQuery(PSN.class);
+		Root<PSN> root = criteriaQuery.from(PSN.class);
+		Predicate predicate1 = criteriaBuilder.equal(root.get(PSN_.key).get(PSNKey_.domain), key.getDomain());//stimmt das?
+		Predicate predicate2 = criteriaBuilder.equal(root.get(PSN_.key).get(PSNKey_.originalValue), key.getOriginValue());//stimmt das?
+		Predicate predicate3 = criteriaBuilder.greaterThan(root.get(PSN_.expiryDate), longTime);
+		criteriaQuery.select(root).where(predicate1).where(predicate2).where(predicate3);
+		try{
+			result=em.createQuery(criteriaQuery).getSingleResult();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return result!=null?result:null;		
+	}
+	
 
 	@Override
 	public PSNTreeDTO getPSNTreeForPSN(String psn, String domain) throws DBException, UnknownDomainException, InvalidPSNException,
@@ -956,7 +1032,7 @@ public class PSNManagerBean implements PSNManager {
 			CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
 			CriteriaQuery<PSN> criteriaQuery = criteriaBuilder.createQuery(PSN.class);
 			Root<PSN> root = criteriaQuery.from(PSN.class);
-			Predicate predicate = criteriaBuilder.equal(root.get(PSN_.pseudonym), psn);
+			Predicate predicate = criteriaBuilder.equal(root.get(PSN_.key).get(PSNKey_.pseudonym), psn);//vorher get(PSN_.pseudonym)
 			criteriaQuery.select(root).where(predicate);
 
 			List<PSN> domains=null;
@@ -971,5 +1047,22 @@ public class PSNManagerBean implements PSNManager {
 			}
 			return returnString.toString().length() > 0 ? returnString.toString().substring(0, returnString.toString().length() - 2): "";
 			
+	}
+
+	
+	//TODO, method not used.
+	@Override
+	public Boolean isPSNExpired(String psn, String domain) throws InvalidGeneratorException, InvalidPSNException,
+			PSNNotFoundException, UnknownDomainException, ValueIsAnonymisedException {
+		
+		Date now = new Date();      
+		Long longTime = now.getTime()/1000;
+		
+		PSN result = null;
+		PSNKey key = new PSNKey(psn, domain,"");//stimmt das so?
+		result=findKeyforUniqueDomain(key);
+		if(longTime>result.getExpiryDate())
+			return true;
+		return false;
 	}
 }
