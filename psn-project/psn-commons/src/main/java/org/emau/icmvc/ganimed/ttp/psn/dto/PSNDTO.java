@@ -31,6 +31,13 @@ package org.emau.icmvc.ganimed.ttp.psn.dto;
  */
 
 import java.io.Serializable;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -47,17 +54,19 @@ public class PSNDTO implements Serializable {
 	private String domain;
 	private String originalValue;
 	private String pseudonym;
+	private Long createdDate;
 	private Long expiryDate;
 	private Boolean isExpired;
 
 	public PSNDTO() {
 	}
 
-	public PSNDTO(String domain, String originalValue, String pseudonym, Long expiryDate) {
+	public PSNDTO(String domain, String originalValue, String pseudonym,Long createdDate, Long expiryDate) {
 		super();
 		this.domain = domain;
 		this.originalValue = originalValue;
 		this.pseudonym = pseudonym;
+		this.createdDate = createdDate;
 		this.expiryDate = expiryDate;
 	}
 
@@ -104,6 +113,23 @@ public class PSNDTO implements Serializable {
 		this.expiryDate = expiryDate;
 	}
 
+	public String getCreatedDate() {
+		return createdAt();
+	}
+
+	public String createdAt() {
+		Instant instant=null;
+		if(createdDate!=null)
+			instant = Instant.ofEpochMilli(createdDate*1000);
+		else
+			return "unknown";
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+		ZoneId z = ZoneId.of("Europe/Berlin");
+		ZonedDateTime zdt = instant.atZone(z);
+		LocalDateTime ld = zdt.toLocalDateTime();
+		return ld.format(formatter);
+	}
+	
 	public Boolean getIsExpired() {
 		Date now = new Date();      
 		Long longTime = now.getTime()/1000;

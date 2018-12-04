@@ -78,6 +78,9 @@ public interface UserManager {
 			@XmlElement(required = true) @WebParam(name = "password") String password)
 								throws InvalidUserNameException, UnknownUserException;
 	
+	public void deleteUserAsAdmin(@XmlElement(required = true) @WebParam(name = "user") String user)
+								throws InvalidUserNameException, UnknownUserException;	
+	
 	public @XmlElement(required = true) String findUser(@XmlElement(required = true) @WebParam(name = "username") String username, 
 							@XmlElement(required = true) @WebParam(name = "password") String password)
 								throws InvalidUserNameException, UnknownUserException, WrongPasswordException;	
@@ -103,6 +106,20 @@ public interface UserManager {
 
 	public @XmlElement(required = true) Boolean isVerified(@XmlElement(required = true) @WebParam(name = "username") String username)
 								throws InvalidUserNameException, UnknownUserException;	
+	
+	public @XmlElement(required = true) List<String> getRoles(@XmlElement(required = true) @WebParam(name = "username") String username)
+			throws InvalidUserNameException, UnknownUserException;
+	
+	public @XmlElement(required = true) Boolean hasRole(@XmlElement(required = true) @WebParam(name = "username") String username,
+			@XmlElement(required = true) @WebParam(name = "role") String role)
+			throws InvalidUserNameException, UnknownUserException;
+	
+	public void toggleRole(@XmlElement(required = true) @WebParam(name = "username") String username,
+			@XmlElement(required = true) @WebParam(name = "role") String role)
+			throws InvalidUserNameException, UnknownUserException;	
+
+	public @XmlElement(required = true) List<String> getAllRoles();
+	
 	
 	/**
 	 * returns all users

@@ -9,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="ROLLE")
+@Table(name="rolle")
 public class RolleBean implements Serializable
 {
   private static final long serialVersionUID = 1L;
@@ -19,7 +19,7 @@ public class RolleBean implements Serializable
   
  
   @Id
-  @Column(name="ID")
+  @Column(name="id")
   @GeneratedValue
   public Integer getId()
   {
@@ -31,7 +31,7 @@ public class RolleBean implements Serializable
     this.intId = int_Id;
   }
   
-  @Column(name="ROLLE")
+  @Column(name="rolle")
   public String getRolle()
   {
     return this.strRolle;

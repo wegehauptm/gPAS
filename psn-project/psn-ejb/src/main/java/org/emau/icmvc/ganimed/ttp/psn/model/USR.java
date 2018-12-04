@@ -44,7 +44,7 @@ public class USR implements Serializable {
 	private boolean admin;
 	
 	@ManyToMany()
-	  @JoinTable (name="BENUTZER_ROLLE", 
+	  @JoinTable (name="benutzer_rolle", 
 	    joinColumns={@JoinColumn(name="BENUTZER_ID") },
 	    inverseJoinColumns={@JoinColumn(name="ROLLEN_ID") })
 	private Collection<RolleBean> rollen;

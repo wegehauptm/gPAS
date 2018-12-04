@@ -1,6 +1,8 @@
 package org.emau.icmvc.ttp.psn.frontend.datamodel;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class User implements Serializable {
 
@@ -10,6 +12,7 @@ public class User implements Serializable {
 	private String username;
 	private boolean admin;
 	private boolean verified;
+	private List<String> roles;
 	
 	public User() {
 		super();
@@ -47,6 +50,17 @@ public class User implements Serializable {
 	public void setVerified(boolean verified) {
 		this.verified = verified;
 	}
-	
+	public List<String> getRoles() {
+		return roles;
+	}
+	public void addRole(String role) {
+		if(roles==null)
+			roles=new ArrayList<String>();
+		this.roles.add(role);
+	}	
+	public void deleteRole(String role) {
+		if(roles!=null)
+			this.roles.remove(role);
+	}
 	
 }

@@ -145,6 +145,15 @@
 			    </h:form>
 			    </h:panelGrid>	
 			    <h:form id="users_form">
+			    
+			    <p:confirmDialog global="true" id="delete_confirmAdmin" message="Do you really want to delete this account?" header="deleting account" severity="alert"
+					widgetVar="delete_confirm_usr_admin">
+
+					<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+					<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+					<!-- <p:ajax update="users_form" /> -->
+				</p:confirmDialog>
+			    
 			    <h:panelGrid rendered="#{UserController.loggedIn and UserController.isAdmin()}">
 			    		<p:dataTable id="users_table" var="user" value="#{UserController.userTableList}" rowKey="#{user.id}"
 						selection="#{UserController.selectedTableUser}" selectionMode="single" resizableColumns="true">
@@ -165,6 +174,24 @@
 									<p:ajax listener="#{UserController.handleChangeVerified}" update="users_form" />
 									<f:attribute name="myuser" value="#{user}" />
 								</h:selectBooleanCheckbox>
+							</p:column>
+							<p:column id="deleteUser" headerText="#{msgs['user.label.table.deleteuser']}">
+							<div align="center">
+								<p:commandButton value="Delete user #{user.username}" action="#{UserController.deleteUser(user.username)}">
+									<p:confirm header="Confirmation" message="Are you sure?" icon="ui-icon-alert"/><!-- delete_confirm_usr_admin -->
+								</p:commandButton>
+							</div>
+							</p:column>
+							<p:column id="changeRole" headerText="#{msgs['user.label.table.changeroles']}">
+							<div align="center">
+								<ui:repeat id="propertyRepeat" var="role" value="#{UserController.allRoles}">
+									<!-- <h:outputText value="#{role}" title="#{role}" /> -->
+									<p:commandButton actionListener="#{UserController.handleChangeRole}" value="#{role}" update="users_form" style="#{UserController.hasRole(user.username, role) ? 'color: green' : 'color: gray'}">
+										<f:attribute name="myuser" value="#{user}" />
+										<f:attribute name="myrole" value="#{role}" />										
+									</p:commandButton>
+								</ui:repeat>
+							</div>
 							</p:column>
 						</p:dataTable>
 			    </h:panelGrid>

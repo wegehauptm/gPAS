@@ -152,6 +152,19 @@ public interface PSNManager {
 			throws DBException, UnknownValueException, ValueIsAnonymisedException;
 
 	/**
+	 * does not delete any existing value-psn pairs
+	 * adds anonym using the key  "###_anonym_###" and a random value
+	 * 
+	 * @param domain
+	 *            for which domain should there be a new anonym
+	 * @throws DBException
+	 *             if an error occurred while anonymising the entry
+	 */
+	public void newAnonymIBDW( @XmlElement(required = true) @WebParam(name = "domain") String domain)
+			throws DBException;
+	
+	
+	/**
 	 * deletes the assignment value - pseudonym from the db
 	 *
 	 * @author schuldtr

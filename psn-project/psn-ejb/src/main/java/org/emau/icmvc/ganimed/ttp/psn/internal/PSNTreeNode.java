@@ -47,12 +47,19 @@ public class PSNTreeNode implements Serializable {
 	private static final long serialVersionUID = 8793711916344280259L;
 	private String domain;
 	private String value;
+	
+	private Long createdDate;
+	private Long expiryDate;
+	
 	private List<PSNTreeNode> children = new ArrayList<PSNTreeNode>();
 
-	public PSNTreeNode(String domain, String value) {
+	public PSNTreeNode(String domain, String value, Long createdDate, Long expiryDate) {
 		super();
 		this.domain = domain;
 		this.value = value;
+		
+		this.createdDate = createdDate;//new
+		this.expiryDate = expiryDate;//new
 	}
 
 	public String getDomain() {
@@ -72,7 +79,7 @@ public class PSNTreeNode implements Serializable {
 	}
 
 	public PSNTreeDTO toDTO() {
-		PSNTreeDTO dto = new PSNTreeDTO(domain, value);
+		PSNTreeDTO dto = new PSNTreeDTO(domain, value, createdDate, expiryDate);
 		for (PSNTreeNode node : children) {
 			dto.addChild(node.toDTO());
 		}

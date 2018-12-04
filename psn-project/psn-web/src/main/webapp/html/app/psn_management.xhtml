@@ -234,11 +234,15 @@
 										</p:outputPanel>
 									</div>
 								</f:facet>
-								<p:column headerText="#{msgs['pseudonym.label.originalValue']}" filterBy="#{psn.originalValue}" filterStyle="display:none" style="width:93%;"
+								<p:column headerText="#{msgs['pseudonym.label.originalValue']}" filterBy="#{psn.originalValue}" filterStyle="display:none" style="width:70%;"
 									filterMatchMode="contains">
 									<h:outputText id="table_value_out" value="#{psn.originalValue}" title="#{psn.originalValue}" style="#{psn.isExpired ? 'color: red' : 'color: black'}"/>
 								</p:column>
-								<p:column headerText="#{msgs['pseudonym.label.Pseudonym']}" filterBy="#{psn.pseudonym}" filterMatchMode="contains" filterStyle="display:none" style="width:7%;">
+								<p:column headerText="#{msgs['pseudonym.label.created']}" style="width:15%;">
+									<h:outputText id="table_psn_created" value="#{psn.createdDate}" title="#{psn.createdDate}" style="#{psn.isExpired ? 'color: red' : 'color: black'}"/>
+								</p:column>
+								
+								<p:column headerText="#{msgs['pseudonym.label.Pseudonym']}" filterBy="#{psn.pseudonym}" filterMatchMode="contains" filterStyle="display:none" style="width:15%;">
 									<h:outputText id="table_psn_out" value="#{psn.pseudonym}" title="#{psn.pseudonym}" style="#{psn.isExpired ? 'color: red' : 'color: black'}"/>
 								</p:column>
 							</p:dataTable>

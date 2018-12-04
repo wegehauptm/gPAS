@@ -174,7 +174,6 @@ public class PsnControllerV2 {
 			System.err.println("----------------------------psnManger is propably null after lookup----------------------------");
 			e.printStackTrace();
 		}  
-		
 		updatePsnList();
 
 	}
@@ -345,6 +344,7 @@ public class PsnControllerV2 {
 			} else {
 				String pseudonym = psnManager.getOrCreatePseudonymFor(originalValue, selectedDomain.getDomain());
 				Object[] args2 = { originalValue, pseudonym };
+				System.err.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>getOrCreatePseudonymFor, origV from form:"+originalValue+" returned psn: "+pseudonym);
 				context.addMessage("pseudonymisation",
 						new FacesMessage(new MessageFormat(messages.getString("psn.info.getPseudonym")).format(args2), ""));
 				if (logger.isInfoEnabled()) {
@@ -747,12 +747,10 @@ public class PsnControllerV2 {
 	}
 
 	public String getSearchValue() {
-		System.err.println("--------------------------------getting searchValue "+searchValue+" --------------------------------");
 		return searchValue;
 	}
 
 	public void setSearchValue(String searchValue) {
-		System.err.println("--------------------------------new searchValue "+searchValue+" set--------------------------------");
 		this.searchValue = searchValue;
 	}
 

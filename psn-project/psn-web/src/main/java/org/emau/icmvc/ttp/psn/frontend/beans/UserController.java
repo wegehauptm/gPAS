@@ -296,6 +296,7 @@ public class UserController {
         }catch(Exception e)
         {
         	e.printStackTrace();
+        	return;
         }
 //            final Hashtable<String, Object> jndiProperties = new Hashtable<>();
 
@@ -317,7 +318,7 @@ public class UserController {
 //            ContextSelector<EJBClientContext> contextSelector = new ConfigBasedEJBClientContextSelector(ejbClientConfiguration);
 //            EJBClientContext.setSelector(contextSelector);
             
-	         AuthenticationConfiguration ejbConfig = AuthenticationConfiguration.empty().useDefaultProviders().useName(username).usePassword(password).useRealm("ApplicationRealm").usePort(8080).setSaslMechanismSelector(SaslMechanismSelector.NONE.addMechanism("PLAIN").forbidMechanism("JBOSS-LOCAL-USER")).useProtocol("remote+http"); ;//.setSaslMechanismSelector(SaslMechanismSelector.NONE.forbidMechanism("JBOSS-LOCAL-USER")); simple-auth-realm .useRealm("ApplicationRealm") .useProviders(() -> new WildFlyElytronProvider[]{new WildFlyElytronProvider()})
+	         AuthenticationConfiguration ejbConfig = AuthenticationConfiguration.empty().useDefaultProviders().useName(username).usePassword(password).useRealm("ApplicationRealm").usePort(80).setSaslMechanismSelector(SaslMechanismSelector.NONE.addMechanism("PLAIN").forbidMechanism("JBOSS-LOCAL-USER")).useProtocol("remote+http"); ;//.setSaslMechanismSelector(SaslMechanismSelector.NONE.forbidMechanism("JBOSS-LOCAL-USER")); simple-auth-realm .useRealm("ApplicationRealm") .useProviders(() -> new WildFlyElytronProvider[]{new WildFlyElytronProvider()})
 	         // .setSaslMechanismSelector(SaslMechanismSelector.NONE.addMechanism("PLAIN")) hinzugefügt
 	         // create your authentication context
 	         AuthenticationContext context = AuthenticationContext.empty().with(MatchRule.ALL, ejbConfig);
@@ -343,9 +344,9 @@ public class UserController {
 	             //org.jboss.security.jndi.JndiLoginInitialContextFactory
 	             properties.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
 //	             properties.put("endpoint.name", "client-endpoint"); 
-	             properties.put(Context.PROVIDER_URL, "remote+http://localhost:8080");//remote+http://: JNDI ContextFactory: ; gpas/psn-ejb; wildfly-services
+	             properties.put(Context.PROVIDER_URL, "remote+http://localhost:80");//remote+http://: JNDI ContextFactory: ; gpas/psn-ejb; wildfly-services
 	             properties.put("remote.connection.default.host", "localhost");
-	             properties.put("remote.connection.default.port", "8080");
+	             properties.put("remote.connection.default.port", "80");
 	             properties.put("remote.connection.default.connect.options.org.xnio.Options.SASL_POLICY_NOANONYMOUS", true);
 	             properties.put("remote.connectionprovider.create.options.org.xnio.Options.SSL_ENABLED", false);
 //	             properties.put("org.jboss.ejb.client.scoped.context", true);
@@ -358,6 +359,7 @@ public class UserController {
 	             PSNManager psnManager = (PSNManager) getSecurityContext().lookup("ejb:gpas/psn-ejb/PSNManagerBean!org.emau.icmvc.ganimed.ttp.psn.PSNManager");//WildFly
 //	             PSNManager psnManager = (PSNManager) new InitialContext(properties).lookup("java:jboss/exported/gpas/psn-ejb/PSNManagerBean!org.emau.icmvc.ganimed.ttp.psn.PSNManager");//WildFly
 //		         PSNManager psnManager = (PSNManager) new InitialContext(properties).lookup("java:global/gpas/psn-ejb/PSNManagerBean!org.emau.icmvc.ganimed.ttp.psn.PSNManager");
+				 userManager=(UserManager)getSecurityContext().lookup("ejb:gpas/psn-ejb/UserManagerBean!org.emau.icmvc.ganimed.ttp.psn.UserManager");
 	             System.err.println(psnManager.getValueForDecode("96417336", "testDomain1"));
 		         return null;
 	         };
@@ -394,17 +396,14 @@ public class UserController {
 			} catch (InvalidUserNameException e) {
 	        	fContext.addMessage("loginMessage", new FacesMessage(messages.getString("user.info.invalidUsername")));
 	        	isLoggedIn=false;
-//	        	userManager=(UserManager)context.lookup("ejb:global/gpas/psn-ejb/UserManagerBean!org.emau.icmvc.ganimed.ttp.psn.UserManager?stateful");
 				e.printStackTrace();
 			} catch (UnknownUserException e) {
 				fContext.addMessage("loginMessage", new FacesMessage(messages.getString("user.info.getUserNotFound")));
 				isLoggedIn=false;
-//				userManager=(UserManager)context.lookup("ejb:global/gpas/psn-ejb/UserManagerBean!org.emau.icmvc.ganimed.ttp.psn.UserManager?stateful");
 				e.printStackTrace();
 			} catch (WrongPasswordException e) {
 				fContext.addMessage("loginMessage", new FacesMessage(messages.getString("user.info.wrongPassword")));
 				isLoggedIn=false;
-//				userManager=(UserManager)context.lookup("ejb:global/gpas/psn-ejb/UserManagerBean!org.emau.icmvc.ganimed.ttp.psn.UserManager?stateful");
 				e.printStackTrace();
 			} catch (NamingException e) {
 				// TODO Auto-generated catch block
@@ -598,6 +597,17 @@ public class UserController {
     		userManager.setNotAdmin(user.getUsername());
 	}
     
+    public void handleChangeRole(ActionEvent event) throws InvalidUserNameException, UnknownUserException{  
+    	User user = (User) event.getComponent().getAttributes().get("myuser");
+    	String role = (String) event.getComponent().getAttributes().get("myrole");
+    	userManager.toggleRole(user.getUsername(),role);
+	}    
+    
+    public String deleteUser(String user) throws InvalidUserNameException, UnknownUserException{  
+    	userManager.deleteUserAsAdmin(user);
+    	return "index.xhtml?faces-redirect=true";
+	}
+    
 	public String getUsername() {
 		return username;
 	}
@@ -677,10 +687,22 @@ public class UserController {
 			users.add(newuser=new User(user.getKey(),user.getValue(),false,false));
 			newuser.setAdmin(userManager.isAdmin(user.getValue()));
 			newuser.setVerified(userManager.isVerified(user.getValue()));
+			for(String rolle:userManager.getRoles(user.getValue()))
+				newuser.addRole(rolle);			
 		}
 		userTableList=users;
 		return userTableList;
 	}
+	
+	public Boolean hasRole(String user, String role) throws InvalidUserNameException, UnknownUserException {				
+		return userManager.hasRole(user, role);
+	}
+	
+	
+	public List<String> getAllRoles(){
+		return userManager.getAllRoles();
+	}
+	
 
 	public void setUserTableList(List<User> userTableList) {
 		this.userTableList = userTableList;

@@ -86,6 +86,11 @@ public class FileControllerV2 {
 	 * @author weiherg
 	 * 
 	 */
+	
+	static {// new Wegehaupt 2018
+		messages = ResourceBundle.getBundle("messages");
+	}
+	
 	public enum ProcessingMode {
 		PSEUDONYMISE_CREATE(messages.getString("file.operations.value1"), "role.psn.getOrCreatePseudonymForList"), 
 		DEPSEUDONYMISE(messages.getString("file.operations.value2"), "role.psn.getValueForList"), 
@@ -170,12 +175,11 @@ public class FileControllerV2 {
 
 	@PostConstruct
 	public void init() {
-		messages = ResourceBundle.getBundle("messages");
+		//messages = ResourceBundle.getBundle("messages"); moved to static block.
 		reset();
 	}
 
 	public void reset() {
-		
 		uploadFile = null;
 		
 		operations = new ArrayList<Operation>();

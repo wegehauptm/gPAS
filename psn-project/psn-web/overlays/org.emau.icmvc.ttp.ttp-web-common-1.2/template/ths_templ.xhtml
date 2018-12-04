@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui" xmlns:ui="http://java.sun.com/jsf/facelets">
+<!-- author: penndorfp, geidell -->
+<!-- edited by: bialkem -->
+<!-- edited by: weihst -->
+<h:head>
+	<title><ui:insert name="header_title">Default Title</ui:insert></title>
+	<link rel="stylesheet" type="text/css" href="#{request.contextPath}/css/ths.css" />
+	<ui:insert name="meta_tags"></ui:insert>
+</h:head>
+<body>
+	<ui:insert name="start" />
+	<div id="header">
+		<div id="customLogo">
+			<ui:insert name="customLogo" />
+		</div>
+		<div id="logo">
+			<img src="#{request.contextPath}/img/icm-logo.png" />
+		</div>
+		<h1>
+			<ui:insert name="title" />
+		</h1>
+		<div style="clear: both;"></div>
+	</div>
+	<div id="mainColumn">
+		<div id="info">
+			<ui:insert name="info">
+				<ul>
+					<li>Bitte daten eingeben</li>
+					<li>nichts vergessen</li>
+				</ul>
+			</ui:insert>
+		</div>
+		<div id="content" align="center">
+			<ui:insert name="content">
+					Hier wird der Consent abgefragt...
+			</ui:insert>
+		</div>
+	</div>
+	<div id="footer">
+		Institute for Community Medicine, Greifswald - Version
+		<ui:insert name="version">
+					Hier wird die Version abgefragt...
+			</ui:insert>
+	</div>
+</body>
+</html>

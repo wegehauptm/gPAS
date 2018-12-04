@@ -1,0 +1,230 @@
+body {
+	font-family: Verdana, sans-serif;
+	font-size: 14px;
+}
+
+/*************************
+*  Container             *
+*************************/
+#header {
+	width: 1000px;
+	margin: 0 auto;
+	text-align: center;
+}
+
+#header h1 {
+	font-size: 120%;
+	color: #4F4F4F;
+	font-family: Verdana, sans-serif;
+	padding-top: 30px;
+}
+
+#logo {
+	margin: 15px 15px 0 0;
+	float: right;
+}
+
+#customLogo {
+	height: 75px;
+	float: left;
+	margin: 10px;
+}
+
+#mainColumn {
+	width: 1000px;
+	margin: 0 auto;
+}
+
+#info {
+	text-align: center;
+	margin: 0 auto;
+}
+
+#info .ui-widget-header {
+	border: 0;
+}
+
+#info .ui-corner-all {
+	-webkit-border-top-left-radius: 3px;
+	-webkit-border-top-right-radius: 3px;
+	-webkit-border-bottom-left-radius: 0;
+	-webkit-border-bottom-right-radius: 0;
+	-moz-border-radius-topleft: 3px;
+	-moz-border-radius-topright: 3px;
+	-moz-border-radius-bottomleft: 0;
+	-moz-border-radius-bottomright: 0;
+	border-top-left-radius: 3px;
+	border-top-right-radius: 3px;
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+#info ul {
+	list-style-type: disc;
+}
+
+#content {
+	background-color: #DEEAF1;
+	background-image: -webkit-linear-gradient(#DEEAF1 0%, white 150%);
+	background-image: -moz-linear-gradient(#DEEAF1 0%, white 150%);
+	background-image: -o-linear-gradient(#DEEAF1 0%, white 150%);
+	background-image: linear-gradient(#DEEAF1 0%, white 150%);
+	border-left: 1px solid #A8A8A8;
+	border-right: 1px solid #A8A8A8;
+	border-bottom: 1px solid #A8A8A8;
+	text-align: left;
+	padding: 10px;
+}
+
+#footer {
+	margin-top: 20px;
+	text-align: center;
+	font-size: 80%;
+	color: #4F4F4F;
+}
+
+/*************************
+*  Formatierung			 *
+*************************/
+.infoPanel {
+	width: 80%;
+}
+
+.centerinfo {
+	padding: 50px;
+	text-align: center;
+	font-size: 1.5em;
+	font-weight: bold;
+}
+
+table {
+	width: 100%;
+}
+
+.errormsg {
+	color: red;
+}
+
+.headline {
+	font-size: 1.1em;
+	padding: 10px 0 5px 0;
+	font-weight: bold;
+	display: block;
+	color: #4f4f4f;
+}
+
+.label {
+	width: 200px;
+}
+
+.input {
+	padding: 4px 0px;
+}
+
+.input>* {
+	box-sizing: border-box;
+	width: 100%;
+}
+
+.resolveButton {
+	margin-top: 10px;
+	text-align: left;
+}
+
+.resolveButtonBlock>* {
+	box-sizing: border-box;
+	width: 100%;
+}
+
+.alignRight {
+	float: right;
+}
+
+.clear {
+	clear: both;
+}
+
+.spacerH20 {
+	height: 20px;
+}
+
+.whiteBackground {
+	background-color: #fff;
+}
+
+#content {
+	font-size: 90%;
+}
+
+div[id="main:valueTable"] thead {
+	display: none;
+}
+
+.panelGrid td {
+	margin-left: 0px !important;
+	font-size: 100% !important;
+	background-color: white;
+	border-color: white !important;
+}
+
+.dataTable {
+	max-width: 980px;
+}
+
+.critcalMatchDifference {
+	background-color: rgb(255, 158, 158);
+}
+
+.hide-column-names table thead tr {
+	display: none;
+}
+
+.helpButton {
+	border-radius: 20px;
+	height: 20px;
+	vertical-align: middle;
+	width: 20px;
+	background: none !important;
+}
+
+/*************************
+*  Anpassungen UI        *
+*************************/
+.ui-panel {
+	border: none;
+}
+
+.ui-inputfield {
+	box-sizing: border-box;
+	width: 100%;
+	font-weight: normal !important;
+}
+
+.ui-tooltip {
+	font-size: 0.9em !important;
+}
+
+.ui-icon.ui-confirm-dialog-severity.ui-icon-alert {
+	display: none;
+}
+
+.ui-datatable-resizable thead th,.ui-datatable-resizable tbody td,.ui-datatable-resizable tfoot td {
+	white-space: normal;
+}
+
+/*************************
+*  Anpassungen FileUpload        *
+*************************/
+.ui-fileupload-buttonbar {
+	background: none;
+	border: none;
+	padding: 0px;
+}
+
+.ui-button.ui-widget.ui-state-default.ui-corner-all.ui-button-text-icon-left.ui-fileupload-cancel {
+	display: none;
+}
+
+.ui-fileupload-content.ui-widget-content.ui-corner-bottom {
+	border: medium none;
+}

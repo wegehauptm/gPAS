@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:p="http://primefaces.org/ui" xmlns:composite="http://java.sun.com/jsf/composite">
+<composite:interface>
+	<composite:attribute name="id" />
+	<composite:attribute name="helptext" type="java.lang.String" />
+	<composite:attribute name="show" />
+</composite:interface>
+<composite:implementation>
+	<p:commandButton id="help" type="button" styleClass="helpButton" icon="ui-icon-help" rendered="#{cc.attrs.show}" />
+	<p:overlayPanel id="tooltip" for="help" hideEffect="fade" my="left top" at="right top">
+                #{cc.attrs.helptext}
+        </p:overlayPanel>
+</composite:implementation>
+</html>

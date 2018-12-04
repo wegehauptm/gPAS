@@ -1,0 +1,36 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:jstl="http://java.sun.com/jsp/jstl/functions" xmlns:p="http://primefaces.org/ui">
+	<f:loadBundle basename="error_labels" var="error_msg" />
+	<h:form id="main">
+		<h:outputText value="#{error_msg['error.label.info']}" />
+
+		<br style="margin-top: 2em;" />
+		<br />
+		<h:outputText value="#{error_msg['error.label.message']}" style="font-size: 1.1em; 
+					font-weight: bold;" />
+
+		<br style="margin-top: 1em;" />
+
+		<h:outputText value="#{error.htmlMessage}" escape="false" style="font-size: 1.1em;" />
+
+		<br style="margin-top: 1em;" />
+		<br />
+
+		<p:commandButton id="detailsButton" action="#{error.toggleStacktraceVisible()}" value="#{error_msg['error.label.detailsbutton']}" update="@form" />
+
+		<br style="margin-top: 2em;" />
+		<br />
+
+		<h:outputText value="#{error_msg['error.label.stacktrace']}" style="font-size: 1.1em; 
+					font-weight: bold;"
+			rendered="#{error.stacktraceVisible}" />
+
+		<br style="margin-top: 1em;" />
+
+		<h:outputText value="#{error.htmlStacktrace}" rendered="#{error.stacktraceVisible}" escape="false" style="font-size: 1.1em;" />
+
+		<br style="margin-top: 1em;" />
+
+	</h:form>
+	<br />
+</ui:composition>

@@ -48,8 +48,8 @@ public class PSNTreeDTO extends PSNDTO {
 	public PSNTreeDTO() {
 	}
 
-	public PSNTreeDTO(String domain, String pseudonym, Long expiryDate) {
-		super(domain, null,pseudonym, expiryDate);
+	public PSNTreeDTO(String domain, String pseudonym, Long createdDate, Long expiryDate) {
+		super(domain, null,pseudonym, createdDate, expiryDate);
 	}
 	
 	public List<PSNTreeDTO> getChildren() {

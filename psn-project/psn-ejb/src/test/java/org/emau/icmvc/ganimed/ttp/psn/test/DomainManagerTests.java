@@ -56,7 +56,7 @@ import org.junit.Test;
 public class DomainManagerTests {
 
 	private static final String DOMAIN = "test12345_domain_test";
-	private static final String DOMAIN_MANAGER_URL = "http://localhost:8080/gpas/DomainService?wsdl";
+	private static final String DOMAIN_MANAGER_URL = "http://localhost:80/gpas/DomainService?wsdl";
 	private DomainManager domainManager;
 	private String propertiesString = GeneratorProperties.PSN_LENGTH + " = 8; " + GeneratorProperties.MAX_DETECTED_ERRORS + " = 2";
 	private static final Logger logger = Logger.getLogger(DomainManagerTests.class);

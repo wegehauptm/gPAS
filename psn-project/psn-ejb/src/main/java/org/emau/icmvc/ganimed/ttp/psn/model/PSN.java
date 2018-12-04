@@ -61,7 +61,7 @@ public class PSN implements Serializable {
 	@MapsId("domain")
 	private PSNProject psnProject;
 	//private String pseudonym;
-	private Long createDate;
+	private Long createdDate;
 	private Long expiryDate;
 
 	/**
@@ -70,12 +70,12 @@ public class PSN implements Serializable {
 	public PSN() {
 	}
 
-	public PSN(PSNProject parent, String originalValue, String pseudonym, Long createDate, Long expiryDate) {
+	public PSN(PSNProject parent, String originalValue, String pseudonym, Long createdDate, Long expiryDate) {
 		super();
 		this.key = new PSNKey(originalValue, parent.getDomain(), pseudonym);
 		//this.pseudonym = pseudonym;
 		this.psnProject = parent;
-		this.createDate = createDate;
+		this.createdDate = createdDate;
 		this.expiryDate = expiryDate;
 	}
 
@@ -92,12 +92,11 @@ public class PSN implements Serializable {
 	}
 
 	public PSNDTO toPSNDTO() {
-		System.err.println("----------converting toPSNDTO:" +key.getOriginValue()+" "+key.getPseudonym()+" "+expiryDate+"----------");
-		return new PSNDTO(key.getDomain(), key.getOriginValue(), key.getPseudonym(), expiryDate);
+		return new PSNDTO(key.getDomain(), key.getOriginValue(), key.getPseudonym(), createdDate, expiryDate);
 	}		
 
-	public Long getCreateDate() {
-		return createDate;
+	public Long getCreatedDate() {
+		return createdDate;
 	}
 
 	public Long getExpiryDate() {
@@ -109,7 +108,7 @@ public class PSN implements Serializable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (key == null ? 0 : key.hashCode());
-		result = prime * result + (createDate == null ? 0 : createDate.hashCode());
+		result = prime * result + (createdDate == null ? 0 : createdDate.hashCode());
 		return result;
 	}
 
@@ -131,7 +130,7 @@ public class PSN implements Serializable {
 			}
 		} else if (!key.equals(other.key)) {
 			return false;
-		} else if(!createDate.equals(other.createDate)) {
+		} else if(!createdDate.equals(other.createdDate)) {
 			return false;
 		}
 		return true;
