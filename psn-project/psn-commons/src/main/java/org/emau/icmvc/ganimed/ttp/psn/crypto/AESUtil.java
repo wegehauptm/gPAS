@@ -5,19 +5,35 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 
 import java.io.UnsupportedEncodingException;
 import java.security.*;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class AESUtil {
 
     public static String secretKey = "nSCyKNUinUjkOqEf";
+    public static Cipher cipherForEncode = getCipher();
 
+    
+    private static Cipher getCipher() {
+    	Cipher tempCipher = null;
+    	try {		
+    		tempCipher=Cipher.getInstance("AES/ECB/PKCS5Padding");
+			tempCipher.init(Cipher.ENCRYPT_MODE, getSecretKey(secretKey));
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	return tempCipher;
+    }
+    
     public static SecretKeySpec getSecretKey(String base64SecretKey){
     	SecretKeySpec skeySpec=null;
         try{
@@ -27,14 +43,12 @@ public class AESUtil {
         } catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}        
         return skeySpec;
     }
-
-    public static byte[] encrypt(String data, String secretKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, getSecretKey(secretKey));
-        return cipher.doFinal(data.getBytes());
+    
+    public static byte[] encrypt(String data, String secretKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {  
+        return cipherForEncode.doFinal(data.getBytes());
     }
 
     public static String decrypt(String dataStr, String secretKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
