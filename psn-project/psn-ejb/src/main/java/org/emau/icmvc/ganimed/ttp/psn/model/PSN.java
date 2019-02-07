@@ -41,6 +41,9 @@ import javax.persistence.MapsId;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.eclipse.persistence.annotations.Cache;
+import org.eclipse.persistence.annotations.CacheCoordinationType;
+import org.eclipse.persistence.annotations.CacheType;
 import org.emau.icmvc.ganimed.ttp.psn.dto.PSNDTO;
 
 /**
@@ -50,6 +53,12 @@ import org.emau.icmvc.ganimed.ttp.psn.dto.PSNDTO;
  * 
  */
 @Entity
+@Cache(
+		  type=CacheType.FULL,
+		  size=128000,  // Use 128,000 as the initial cache size.
+		  expiry=360000,  // 6 minutes
+		  coordinationType=CacheCoordinationType.INVALIDATE_CHANGED_OBJECTS  // if cache coordination is used, only send invalidation messages.
+		)
 @Table(name = "psn", uniqueConstraints = @UniqueConstraint(columnNames = { "domain", "originalValue", "pseudonym" }, name = "domain_pseudonym"))//columnNames = { "domain", "pseudonym" }
 public class PSN implements Serializable {
 
