@@ -238,7 +238,7 @@ public class PSNManagerBean implements PSNManager {
 			e.printStackTrace();
 		}
 		if(newValue.equals("") || newValue==null)
-			return "encodingInvalid";
+			return value+"_!!!";
 		return newValue;
 	}
 
@@ -293,14 +293,14 @@ public class PSNManagerBean implements PSNManager {
 				if(parent.getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE)!=null && 
 						parent.getProperties().get(GeneratorProperties.ENCODE_ORIGINAL_VALUE).equals("true") && !value.equals(VALUE_IS_ANONYMISED)) {
 					temp=getGeneratorFor(parent.getDomain());				
-					temp.setOriginalValue(value);
+					temp.setOriginalValue(value);//Verstehe ich nicht mehr... Was soll das? Wegehaupt 2019
 					System.err.println("origValue @ createPSN: "+value);
 					}
 				else {
 					temp=getGeneratorFor(parent.getDomain());
 				}				
 				pseudonym = temp.getNewPseudonym();
-				if ((existingPseudonyms != null && existingPseudonyms.contains(pseudonym))
+				if ((existingPseudonyms != null && existingPseudonyms.contains(pseudonym))					//was ist HashSet<String> existingPseudonyms???
 						|| (existingPseudonyms == null && existsPseudonym(parent.getDomain(), pseudonym))) {
 					if (logger.isDebugEnabled()) {
 						logger.debug("duplicate pseudonym generated - attemp " + countCollisions + " of " + MAX_ATTEMPS_BEFORE_RESEED);
@@ -334,7 +334,7 @@ public class PSNManagerBean implements PSNManager {
 						parent, 
 						value,
 						pseudonym, 
-						longTime.longValue(), 
+						longTime.longValue(),
 						parent.getProperties().get(GeneratorProperties.EXPIRY_TIME_OF_PSN)!=null?longTime.longValue()+Long.parseLong(parent.getProperties().get(GeneratorProperties.EXPIRY_TIME_OF_PSN)):null);
 			}else {
 				result = new PSN(
@@ -366,7 +366,7 @@ public class PSNManagerBean implements PSNManager {
 			}
 			else 
 			{
-				return !getPSNObjectsExperimental(domain, pseudonym).isEmpty();//CHANGE BACK
+				return !getPSNObjects(domain, pseudonym).isEmpty();
 			}
 		} catch (UnknownDomainException e) {
 			// TODO Auto-generated catch block
@@ -699,6 +699,29 @@ public class PSNManagerBean implements PSNManager {
 		return result;
 	}
 	
+	@Override
+	public String getExpiry(String psn, String domain)
+			throws InvalidPSNException, PSNNotFoundException, InvalidGeneratorException, UnknownDomainException {
+		String result = "";
+		if (logger.isDebugEnabled()) {
+			logger.debug("find expiryDate for pseudonym '" + psn + "' within domain '" + domain + "'");
+		}
+		validatePSN(psn, domain);
+		List<PSN> resultList = getPSNObjects(domain, psn);
+		if (resultList.size() == 1) {
+			result = resultList.get(0).toPSNDTO().getExpiryDateString();
+		} else if (resultList.isEmpty()) {
+			String message = "value for pseudonym '" + psn + "' not found within domain '" + domain + "'";
+			logger.warn(message);
+			throw new PSNNotFoundException(message);
+		} else {
+			String message = "found multiple values for pseudonym '" + psn + "' within domain '" + domain + "' - may be a jpa-caching problem";
+			logger.fatal(message);
+			throw new InvalidPSNException(message);
+		}
+		return result;
+	}
+	
 	private PSN getValueForAsPSN(String psn, String domain)
 			throws InvalidPSNException, PSNNotFoundException, InvalidGeneratorException, UnknownDomainException, ValueIsAnonymisedException {
 		PSN result = null;
@@ -953,7 +976,7 @@ public class PSNManagerBean implements PSNManager {
 			throws DBException, InvalidGeneratorException, InvalidPSNException, UnknownDomainException {
 		
 		boolean isUniqueDomain=false;
-		boolean isExpiryDomain =false;
+		boolean isExpiryDomain=false;
 		
 		if (logger.isInfoEnabled()) {
 			logger.info("insert pseudonym for '" + value + "' in domain '" + domain + "'");

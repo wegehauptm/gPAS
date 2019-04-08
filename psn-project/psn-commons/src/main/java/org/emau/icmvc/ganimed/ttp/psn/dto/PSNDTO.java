@@ -57,6 +57,7 @@ public class PSNDTO implements Serializable {
 	private Long createdDate;
 	private Long expiryDate;
 	private Boolean isExpired;
+	private String expiryDateString;
 
 	public PSNDTO() {
 	}
@@ -110,7 +111,7 @@ public class PSNDTO implements Serializable {
 	}
 
 	public void setExpiryDate(Long expiryDate) {
-		this.expiryDate = expiryDate;
+		this.expiryDate = expiryDate;		
 	}
 
 	public String getCreatedDate() {
@@ -200,5 +201,23 @@ public class PSNDTO implements Serializable {
 		sb.append(pseudonym);
 		sb.append("'");
 		return sb.toString();
+	}
+
+	public String getExpiryDateString() {		
+		Instant instant;
+		if(expiryDate!=null)
+			instant = Instant.ofEpochMilli(expiryDate*1000);
+		else
+			return "unknown";
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+		ZoneId z = ZoneId.of("Europe/Berlin");
+		ZonedDateTime zdt = instant.atZone(z);
+		LocalDateTime ld = zdt.toLocalDateTime();
+		this.expiryDateString=ld.format(formatter);
+		return this.expiryDateString;	
+	}
+
+	public void setExpiryDateString(String expiryDateString) {
+		this.expiryDateString = expiryDateString;
 	}
 }

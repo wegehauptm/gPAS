@@ -519,7 +519,7 @@ public class UserController {
         PsnControllerV2 psnController=(PsnControllerV2) facesContext.getApplication().getELResolver().getValue(facesContext.getELContext(), null, "PsnControllerV2");
         psnController.init();
         
-        AuthenticationConfiguration ejbConfig = AuthenticationConfiguration.empty().useDefaultProviders().useName("none").usePassword("blank").useRealm("ApplicationRealm").usePort(8080).setSaslMechanismSelector(SaslMechanismSelector.NONE.addMechanism("PLAIN").forbidMechanism("JBOSS-LOCAL-USER")).useProtocol("remote+http"); ;//.setSaslMechanismSelector(SaslMechanismSelector.NONE.forbidMechanism("JBOSS-LOCAL-USER")); simple-auth-realm .useRealm("ApplicationRealm") .useProviders(() -> new WildFlyElytronProvider[]{new WildFlyElytronProvider()})
+        AuthenticationConfiguration ejbConfig = AuthenticationConfiguration.empty().useDefaultProviders().useName("none").usePassword("blank").useRealm("ApplicationRealm").usePort(80).setSaslMechanismSelector(SaslMechanismSelector.NONE.addMechanism("PLAIN").forbidMechanism("JBOSS-LOCAL-USER")).useProtocol("remote+http"); ;//.setSaslMechanismSelector(SaslMechanismSelector.NONE.forbidMechanism("JBOSS-LOCAL-USER")); simple-auth-realm .useRealm("ApplicationRealm") .useProviders(() -> new WildFlyElytronProvider[]{new WildFlyElytronProvider()})
         // .setSaslMechanismSelector(SaslMechanismSelector.NONE.addMechanism("PLAIN")) hinzugefügt
         // create your authentication context
         AuthenticationContext context = AuthenticationContext.empty().with(MatchRule.ALL, ejbConfig);

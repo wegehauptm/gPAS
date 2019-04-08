@@ -59,7 +59,7 @@ import org.emau.icmvc.ganimed.ttp.psn.dto.PSNDTO;
 		  expiry=360000,  // 6 minutes
 		  coordinationType=CacheCoordinationType.INVALIDATE_CHANGED_OBJECTS  // if cache coordination is used, only send invalidation messages.
 		)
-@Table(name = "psn", uniqueConstraints = @UniqueConstraint(columnNames = { "domain", "originalValue", "pseudonym" }, name = "domain_pseudonym"))//columnNames = { "domain", "pseudonym" }
+@Table(name = "psn", uniqueConstraints = @UniqueConstraint(columnNames = { "domain", "pseudonym" }, name = "domain_pseudonym"))//columnNames = { "domain", "originalValue", "pseudonym" } formerly. wrong i guess.
 public class PSN implements Serializable {
 
 	private static final long serialVersionUID = -4303062729589967516L;

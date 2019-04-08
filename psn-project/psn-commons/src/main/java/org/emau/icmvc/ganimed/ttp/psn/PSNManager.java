@@ -228,6 +228,10 @@ public interface PSNManager {
 	public @XmlElement(required = true) String getValueForDecode(@XmlElement(required = true) @WebParam(name = "psn") String psn, 
 			@XmlElement(required = true) @WebParam(name = "domain") String domain) 
 			throws InvalidGeneratorException, InvalidPSNException, PSNNotFoundException, UnknownDomainException, ValueIsAnonymisedException;
+
+	public @XmlElement(required = true) String getExpiry(@XmlElement(required = true) @WebParam(name = "psn") String psn, 
+			@XmlElement(required = true) @WebParam(name = "domain") String domain) 
+			throws InvalidGeneratorException, InvalidPSNException, PSNNotFoundException, UnknownDomainException;
 	
 	public @XmlElement(required = true) Boolean isPSNExpired(@XmlElement(required = true) @WebParam(name = "psn") String psn, 
 			@XmlElement(required = true) @WebParam(name = "domain") String domain) 

@@ -389,7 +389,8 @@ public class PsnControllerV2 {
 		}
 		try {
 			String originalValue = psnManager.getValueFor(pseudonym, selectedDomain.getDomain());
-			Object[] args2 = { originalValue, pseudonym };
+			String expiresOn = psnManager.getExpiry(pseudonym,selectedDomain.getDomain());
+			Object[] args2 = { originalValue, pseudonym, expiresOn};
 			if (logger.isInfoEnabled()) {
 				logger.info("original value retrieved for pseudonym'" + pseudonym + "'");
 			}
